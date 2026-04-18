@@ -324,8 +324,8 @@
     .toast.show { transform: translateX(-50%) translateY(0); }
 
     /* ── PROCESS BOT ── */
-    #bot-bubble { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-    .bot-toggle { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #7430FF, #C87DE8); border: none; cursor: pointer; box-shadow: 0 4px 18px rgba(116,48,255,.45); display: flex; align-items: center; justify-content: center; font-size: 22px; transition: transform .2s, box-shadow .2s; flex-shrink: 0; }
+    #bot-bubble { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; }
+    .bot-toggle { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #7430FF, #C87DE8); border: none; cursor: pointer; box-shadow: 0 4px 18px rgba(116,48,255,.45); display: flex; align-items: center; justify-content: center; font-size: 22px; transition: transform .2s, box-shadow .2s; flex-shrink: 0; pointer-events: all; }
     .bot-toggle:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(116,48,255,.55); }
     .bot-toggle .bot-close-icon { display: none; font-size: 18px; }
     .bot-open .bot-toggle .bot-main-icon { display: none; }
