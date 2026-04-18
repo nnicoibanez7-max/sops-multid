@@ -1,0 +1,2283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de SOPs Multi D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #7430FF; --blue-dark: #5a20e8; --blue-light: #F6F2FF;
+      --green: #34a853; --green-light: #e6f4ea;
+      --red: #ea4335; --red-light: #fce8e6;
+      --purple: #C87DE8; --purple-light: #f0e8ff;
+      --amber: #d97706; --amber-light: #fef3c7;
+      --bg: #eeeaf8; --white: #ffffff;
+      --border: #d5c8f5; --text: #000013; --text-2: #3d3660; --text-3: #7a6fa8;
+      --radius: 10px; --shadow: 0 1px 3px rgba(116,48,255,.18), 0 2px 8px rgba(116,48,255,.10);
+    }
+    body { font-family: 'Raleway', 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── HEADER ── */
+    header { background: #000013; border-bottom: 1px solid #1e1850; padding: 0 20px; height: 58px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(116,48,255,.25); }
+    .logo { font-size: 17px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-family: 'Raleway', sans-serif; letter-spacing: -.2px; }
+    .logo em { font-style: normal; color: #C87DE8; }
+    .logo-tag { font-size: 9px; font-weight: 700; background: var(--purple-light); color: var(--purple); padding: 2px 6px; border-radius: 10px; text-transform: uppercase; letter-spacing: .5px; }
+    .steps-nav { display: flex; gap: 2px; margin-left: auto; }
+    .step-btn { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.45); border: none; background: transparent; cursor: pointer; transition: all .15s; white-space: nowrap; font-family: 'Titillium Web', sans-serif; }
+    .step-btn.active { color: #fff; background: rgba(116,48,255,.55); }
+    .step-btn.done   { color: #C87DE8; }
+    .step-btn.hidden { display: none; }
+    .step-num { width: 19px; height: 19px; border-radius: 50%; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; flex-shrink: 0; }
+    .step-btn.active .step-num { background: #7430FF; color: #fff; }
+    .step-btn.done   .step-num { background: #C87DE8; color: #fff; }
+
+    /* ── LAYOUT ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 22px 16px; }
+    .screen { display: none; } .screen.active { display: block; }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all .18s; }
+    .btn-primary { background: var(--blue); color: #fff; } .btn-primary:hover { background: var(--blue-dark); box-shadow: var(--shadow); }
+    .btn-outline  { background: var(--white); color: var(--blue); border: 1px solid var(--border); } .btn-outline:hover { background: var(--blue-light); border-color: var(--blue); }
+    .btn-ghost    { background: transparent; color: var(--text-2); border: 1px solid var(--border); } .btn-ghost:hover { background: var(--bg); }
+    .btn-danger   { background: var(--red); color: #fff; } .btn-danger:hover { background: #c62828; }
+    .btn-green    { background: var(--green); color: #fff; } .btn-green:hover { background: #2d8f47; }
+    .btn-purple   { background: var(--purple); color: #fff; } .btn-purple:hover { background: #5b21b6; }
+    .btn-lg { padding: 12px 28px; font-size: 14px; border-radius: 8px; }
+    .btn-sm { padding: 5px 11px; font-size: 11px; border-radius: 4px; }
+    .btn-row { display: flex; justify-content: flex-end; gap: 9px; margin-top: 14px; }
+
+    /* ── HOME ── */
+    .page-title { text-align: center; margin-bottom: 26px; }
+    .page-title h1 { font-size: 24px; font-weight: 800; margin-bottom: 5px; font-family: 'Raleway', sans-serif; color: var(--text); }
+    .page-title p  { color: var(--text-2); font-size: 13px; }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .mode-card { border: 2px solid var(--border); border-radius: var(--radius); padding: 20px 18px; cursor: pointer; transition: all .2s; background: var(--white); position: relative; }
+    .mode-card:hover { border-color: var(--blue); box-shadow: var(--shadow); }
+    .mode-card.selected-dictate { border-color: var(--blue); background: var(--blue-light); }
+    .mode-card.selected-record  { border-color: var(--red);  background: var(--red-light); }
+    .mode-badge { position: absolute; top: 10px; right: 10px; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 100px; background: var(--green); color: #fff; text-transform: uppercase; letter-spacing: .4px; }
+    .mode-icon  { font-size: 28px; margin-bottom: 8px; }
+    .mode-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .mode-desc  { font-size: 12px; color: var(--text-2); line-height: 1.45; }
+    .tpl-section { margin-bottom: 20px; } .tpl-section.hidden { display: none; }
+    .tpl-wrap { background: var(--white); border-radius: var(--radius); padding: 16px 18px; }
+    .tpl-wrap-title { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+    .template-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 9px; }
+    .tpl-card { border: 2px solid var(--border); border-radius: 7px; padding: 12px 11px; cursor: pointer; transition: all .2s; background: var(--white); }
+    .tpl-card:hover    { border-color: var(--blue); }
+    .tpl-card.selected { border-color: var(--blue); background: var(--blue-light); }
+    .tpl-icon { font-size: 20px; margin-bottom: 5px; }
+    .tpl-name { font-size: 11.5px; font-weight: 700; margin-bottom: 2px; }
+    .tpl-desc { font-size: 10.5px; color: var(--text-2); line-height: 1.35; }
+    .form-card { background: var(--white); border-radius: var(--radius); padding: 20px 24px; }
+    .form-card h2 { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; font-family: 'Titillium Web', sans-serif; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 11px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 10.5px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .3px; }
+    .form-group input, .form-group select { border: 1px solid var(--border); border-radius: 5px; padding: 7px 10px; font-size: 13px; outline: none; font-family: inherit; color: var(--text); transition: border-color .2s; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--blue); }
+
+    /* ── DICTATE ── */
+    .dictate-layout { display: grid; grid-template-columns: 210px 1fr 270px; gap: 14px; }
+    .sec-nav { background: var(--white); border-radius: var(--radius); padding: 12px 9px; position: sticky; top: 66px; height: fit-content; }
+    .sec-nav-title { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; padding: 0 6px; margin-bottom: 7px; }
+    .sec-item { display: flex; align-items: center; gap: 7px; padding: 6px 7px; border-radius: 5px; cursor: pointer; font-size: 11.5px; transition: all .12s; user-select: none; }
+    .sec-item:hover { background: var(--bg); }
+    .sec-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+    .sec-item.done   { color: var(--green); }
+    .sec-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .sec-item.active .sec-dot { background: var(--blue); }
+    .sec-item.done   .sec-dot { background: var(--green); }
+    .progress-wrap { margin-top: 11px; padding: 0 3px; }
+    .progress-bar { height: 3px; background: var(--border); border-radius: 2px; }
+    .progress-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width .3s; }
+    .progress-label { font-size: 10px; color: var(--text-3); margin-top: 4px; }
+    .dictate-panel { display: flex; flex-direction: column; gap: 12px; }
+    .sec-header { background: var(--white); border-radius: var(--radius); padding: 18px 22px; }
+    .sec-badge { display: inline-block; background: var(--blue-light); color: var(--blue); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 7px; font-family: 'Titillium Web', sans-serif; }
+    .sec-title { font-size: 17px; font-weight: 700; margin-bottom: 5px; font-family: 'Raleway', sans-serif; }
+    .sec-hint  { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+    .mic-area { background: var(--white); border-radius: var(--radius); padding: 18px 22px; }
+    .tbox { min-height: 68px; border: 2px dashed var(--border); border-radius: 7px; padding: 11px 13px; font-size: 13px; line-height: 1.6; margin-bottom: 13px; transition: all .2s; }
+    .tbox.listening   { border-color: var(--red);   border-style: solid; background: #fff5f4; }
+    .tbox.has-content { border-color: var(--green);  border-style: solid; background: #f6fef8; }
+    .t-placeholder { color: var(--text-3); font-style: italic; font-size: 12px; }
+    .t-interim     { color: var(--text-2); }
+    .mic-row { display: flex; align-items: center; gap: 12px; }
+    .mic-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--blue); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; box-shadow: var(--shadow); transition: all .2s; }
+    .mic-btn:hover { background: var(--blue-dark); transform: scale(1.05); }
+    .mic-btn.listening { background: var(--red); animation: mic-pulse 1.4s infinite; }
+    @keyframes mic-pulse { 0%{box-shadow:0 0 0 0 rgba(234,67,53,.45)} 70%{box-shadow:0 0 0 12px rgba(234,67,53,0)} 100%{box-shadow:0 0 0 0 rgba(234,67,53,0)} }
+    .mic-info { font-size: 12px; color: var(--text-2); }
+    .mic-info strong { display: block; margin-bottom: 2px; color: var(--text); font-size: 12.5px; }
+    .content-card { background: var(--white); border-radius: var(--radius); padding: 18px 22px; }
+    .content-card h3 { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
+    .content-ta { width: 100%; min-height: 120px; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: 13px; line-height: 1.65; resize: vertical; outline: none; font-family: inherit; color: var(--text); transition: border-color .2s; }
+    .content-ta:focus { border-color: var(--blue); }
+
+    /* ── KB PANEL (right sidebar in dictate) ── */
+    .kb-panel { position: sticky; top: 66px; height: fit-content; display: flex; flex-direction: column; gap: 10px; }
+
+    .kb-card { background: var(--white); border-radius: var(--radius); padding: 14px 15px; }
+    .kb-card-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .kb-card-title.sys { color: var(--purple); }
+    .kb-card-title.rol { color: var(--amber); }
+    .kb-card-title.chk { color: var(--green); }
+
+    .kb-principle { background: var(--purple-light); border-left: 3px solid var(--purple); border-radius: 0 6px 6px 0; padding: 9px 11px; margin-bottom: 9px; }
+    .kb-p-name  { font-size: 10.5px; font-weight: 700; color: var(--purple); margin-bottom: 3px; }
+    .kb-p-text  { font-size: 11px; color: var(--text-2); line-height: 1.5; }
+
+    .kb-questions { list-style: none; }
+    .kb-questions li { font-size: 11px; color: var(--text-2); line-height: 1.5; padding: 4px 0; border-bottom: 1px solid var(--bg); display: flex; gap: 6px; }
+    .kb-questions li:last-child { border-bottom: none; }
+    .kb-q-icon { flex-shrink: 0; font-size: 10px; padding-top: 2px; color: var(--purple); }
+
+    .raci-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; }
+    .raci-pill { border-radius: 5px; padding: 5px 7px; }
+    .raci-pill.r { background: #dbeafe; border-left: 3px solid #3b82f6; }
+    .raci-pill.a { background: #fce7f3; border-left: 3px solid #ec4899; }
+    .raci-pill.c { background: #d1fae5; border-left: 3px solid #10b981; }
+    .raci-pill.i { background: #fef3c7; border-left: 3px solid #f59e0b; }
+    .raci-letter { font-size: 11px; font-weight: 800; margin-bottom: 1px; }
+    .raci-letter.r { color: #2563eb; }
+    .raci-letter.a { color: #db2777; }
+    .raci-letter.c { color: #059669; }
+    .raci-letter.i { color: #d97706; }
+    .raci-desc  { font-size: 9.5px; color: var(--text-2); line-height: 1.3; }
+
+    .kb-quality-row { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 5px; cursor: pointer; }
+    .kb-quality-row:last-child { margin-bottom: 0; }
+    .kb-chk { width: 14px; height: 14px; border: 2px solid var(--border); border-radius: 3px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: transparent; transition: all .15s; }
+    .kb-quality-row.checked .kb-chk { background: var(--green); border-color: var(--green); color: #fff; }
+    .kb-quality-row.checked .kb-q-text { color: var(--text-3); text-decoration: line-through; }
+    .kb-q-text { font-size: 11px; color: var(--text-2); line-height: 1.4; }
+
+    /* ── RECORD SCREEN ── */
+    .record-layout { display: grid; grid-template-columns: 1fr 290px; gap: 14px; }
+    .record-main { display: flex; flex-direction: column; gap: 11px; }
+    .rec-controls { background: var(--white); border-radius: var(--radius); padding: 11px 16px; display: flex; align-items: center; gap: 11px; }
+    .rec-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+    .rec-dot.active { background: var(--red); animation: blink 1.1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+    .rec-status { font-size: 13px; font-weight: 600; color: var(--text-2); }
+    .rec-timer  { font-family: 'Courier New', monospace; font-size: 19px; font-weight: 700; min-width: 52px; }
+    .rec-spacer { flex: 1; }
+    .screen-preview-wrap { background: #111827; border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 16/9; min-height: 180px; }
+    #screenPreviewVideo { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .start-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 11px; padding: 20px; }
+    .start-overlay .ov-icon { font-size: 40px; }
+    .start-overlay .ov-text { color: rgba(255,255,255,.7); font-size: 12.5px; text-align: center; line-height: 1.5; max-width: 260px; }
+    .btn-start-rec { background: var(--red); color: #fff; border: none; padding: 12px 26px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 8px; transition: all .2s; }
+    .btn-start-rec:hover { background: #c62828; box-shadow: 0 4px 16px rgba(234,67,53,.4); }
+    .start-overlay .ov-note { color: rgba(255,255,255,.4); font-size: 10.5px; text-align: center; }
+    .tl-card { background: var(--white); border-radius: var(--radius); padding: 13px 16px; }
+    .tl-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+    .tl-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+    .tl-dot.on { background: var(--red); animation: blink 1.1s infinite; }
+    .tl-text { min-height: 48px; font-size: 12.5px; line-height: 1.6; color: var(--text-2); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; background: var(--bg); word-break: break-word; }
+    .tl-current  { color: var(--text); }
+    .tl-interim  { color: var(--text-3); font-style: italic; }
+    .tl-placeholder { color: var(--text-3); font-style: italic; font-size: 12px; }
+    .steps-sidebar { display: flex; flex-direction: column; gap: 10px; }
+    .capture-card { background: var(--white); border-radius: var(--radius); padding: 13px 14px; }
+    .capture-card h3 { font-size: 11.5px; font-weight: 700; color: var(--text-2); margin-bottom: 9px; }
+    .btn-capture { width: 100%; padding: 11px; border-radius: 6px; background: var(--red); color: #fff; border: none; cursor: pointer; font-size: 13px; font-weight: 700; font-family: inherit; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 7px; }
+    .btn-capture:hover:not(:disabled) { background: #c62828; box-shadow: var(--shadow); }
+    .btn-capture:disabled { background: var(--border); color: var(--text-3); cursor: not-allowed; }
+    .auto-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 11px; color: var(--text-2); cursor: pointer; user-select: none; }
+    .tog { width: 30px; height: 16px; border-radius: 8px; background: var(--border); position: relative; transition: background .2s; flex-shrink: 0; }
+    .tog.on { background: var(--green); }
+    .tog-k { width: 12px; height: 12px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+    .tog.on .tog-k { left: 16px; }
+    .captured-list { background: var(--white); border-radius: var(--radius); overflow: hidden; }
+    .cl-header { padding: 10px 13px; border-bottom: 1px solid var(--border); font-size: 11.5px; font-weight: 700; color: var(--text-2); display: flex; align-items: center; justify-content: space-between; }
+    .cl-count { background: var(--blue-light); color: var(--blue); padding: 2px 7px; border-radius: 9px; font-size: 10.5px; font-weight: 700; }
+    .cl-empty { padding: 18px 13px; text-align: center; font-size: 11px; color: var(--text-3); font-style: italic; line-height: 1.55; }
+    .cl-scroll { max-height: 280px; overflow-y: auto; }
+    .cl-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 11px; border-bottom: 1px solid var(--bg); transition: background .12s; }
+    .cl-item:last-child { border-bottom: none; }
+    .cl-item:hover { background: var(--bg); }
+    .cl-thumb { width: 60px; height: 38px; border-radius: 3px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+    .cl-thumb-ph { width: 60px; height: 38px; border-radius: 3px; background: var(--bg); border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text-3); }
+    .cl-info { flex: 1; min-width: 0; }
+    .cl-num  { font-size: 9.5px; font-weight: 700; color: var(--blue); margin-bottom: 2px; }
+    .cl-txt  { font-size: 10.5px; color: var(--text-2); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .cl-del  { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 12px; padding: 2px 3px; border-radius: 3px; flex-shrink: 0; transition: color .12s; }
+    .cl-del:hover { color: var(--red); }
+
+    /* ── REVIEW SCREEN ── */
+    .review-top { background: var(--white); border-radius: var(--radius); padding: 18px 24px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .review-top-info h2 { font-size: 16px; font-weight: 800; font-family: 'Raleway', sans-serif; }
+    .review-top-info p  { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+    .review-top-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .review-list { display: flex; flex-direction: column; gap: 13px; margin-bottom: 18px; }
+    .rv-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: box-shadow .2s; }
+    .rv-card:hover { box-shadow: var(--shadow); }
+    .rv-top { display: flex; align-items: center; gap: 11px; padding: 11px 16px; border-bottom: 1px solid var(--border); }
+    .rv-num { width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .rv-title-in { flex: 1; border: 1px solid var(--border); border-radius: 4px; padding: 5px 9px; font-size: 13px; font-weight: 600; outline: none; font-family: inherit; color: var(--text); }
+    .rv-title-in:focus { border-color: var(--blue); }
+    .rv-time { font-size: 9.5px; color: var(--text-3); white-space: nowrap; }
+    .rv-acts { display: flex; gap: 4px; }
+    .rv-act { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 12px; color: var(--text-2); transition: all .12s; }
+    .rv-act:hover { background: var(--bg); }
+    .rv-act.danger:hover { background: var(--red-light); border-color: var(--red); color: var(--red); }
+    .rv-body { display: grid; grid-template-columns: 1fr 260px; }
+    .rv-body.no-img { grid-template-columns: 1fr; }
+    .rv-left { padding: 13px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+    .rv-body.no-img .rv-left { border-right: none; }
+    .rv-ta { width: 100%; border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; font-size: 13px; line-height: 1.6; resize: vertical; min-height: 72px; outline: none; font-family: inherit; color: var(--text); }
+    .rv-ta:focus { border-color: var(--blue); }
+    .rv-right { padding: 13px 13px; display: flex; flex-direction: column; gap: 7px; }
+    .rv-img { width: 100%; border-radius: 4px; border: 1px solid var(--border); display: block; }
+    .rv-img-rm { font-size: 10.5px; color: var(--text-3); text-align: center; cursor: pointer; transition: color .12s; }
+    .rv-img-rm:hover { color: var(--red); }
+
+    /* RACI inline in review */
+    .raci-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .raci-field { display: flex; flex-direction: column; gap: 3px; }
+    .raci-field label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; display: flex; align-items: center; gap: 4px; }
+    .raci-field label span.r { color: #2563eb; }
+    .raci-field label span.a { color: #db2777; }
+    .raci-field label span.c { color: #059669; }
+    .raci-field label span.i { color: #d97706; }
+    .raci-field input { border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; font-size: 11.5px; outline: none; font-family: inherit; color: var(--text); }
+    .raci-field input:focus { border-color: var(--blue); }
+    .raci-obs-label { font-size: 9.5px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 3px; }
+    .raci-obs-ta { width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 6px 9px; font-size: 11.5px; line-height: 1.5; resize: none; min-height: 52px; outline: none; font-family: inherit; color: var(--text); }
+    .raci-obs-ta:focus { border-color: var(--purple); }
+
+    .add-step-btn { width: 100%; padding: 11px; border-radius: 8px; border: 2px dashed var(--border); background: transparent; color: var(--text-3); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit; }
+    .add-step-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+    /* ── PREVIEW SCREEN ── */
+    .preview-layout { display: grid; grid-template-columns: 1fr 280px; gap: 18px; }
+    .doc-wrap  { background: #d5c8f5; padding: 16px; border-radius: var(--radius); }
+    .doc-paper { background: #fff; max-width: 760px; margin: 0 auto; padding: 56px 64px; box-shadow: 0 2px 10px rgba(0,0,0,.18); font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.65; color: #000; min-height: 860px; }
+
+    /* Document styles */
+    .doc-header-section { border-bottom: 3px solid #7430FF; padding-bottom: 15px; margin-bottom: 24px; }
+    .doc-company-name   { font-size: 17pt; font-weight: 800; color: #7430FF; margin-bottom: 2px; font-family: 'Raleway', sans-serif; }
+    .doc-type-label     { font-size: 9pt; color: #666; }
+    .doc-meta-table     { width: 100%; border-collapse: collapse; margin-top: 11px; font-size: 9pt; }
+    .doc-meta-table td  { padding: 5px 8px; border: 1px solid #d5c8f5; }
+    .label-cell         { background: #F6F2FF; font-weight: 700; color: #3d3660; width: 105px; }
+    .doc-process-title  { font-size: 14pt; font-weight: 800; text-align: center; padding: 12px 16px; background: #F6F2FF; border-left: 5px solid #7430FF; margin-bottom: 24px; font-family: 'Raleway', sans-serif; color: #000013; }
+    .doc-section        { margin-bottom: 24px; }
+    .doc-sec-title      { font-size: 11.5pt; font-weight: 700; color: #7430FF; border-bottom: 1px solid #d5c8f5; padding-bottom: 5px; margin-bottom: 10px; font-family: 'Titillium Web', sans-serif; }
+    .doc-text           { font-size: 11pt; line-height: 1.7; white-space: pre-wrap; }
+    .doc-steps, .doc-checklist { padding-left: 0; list-style: none; }
+    .doc-steps li, .doc-checklist li { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 10px; font-size: 11pt; line-height: 1.6; }
+    .doc-step-num  { background: #7430FF; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .doc-checkbox  { width: 14px; height: 14px; border: 2px solid #7430FF; border-radius: 3px; flex-shrink: 0; margin-top: 3px; display: inline-block; }
+    .doc-footer-section { border-top: 1px solid #d5c8f5; margin-top: 38px; padding-top: 11px; font-size: 8.5pt; color: #7a6fa8; display: flex; justify-content: space-between; }
+    .doc-step-card  { margin-bottom: 26px; page-break-inside: avoid; }
+    .doc-step-header { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 8px; }
+    .doc-step-title { font-size: 12pt; font-weight: 700; color: #000013; padding-top: 1px; font-family: 'Titillium Web', sans-serif; }
+    .doc-step-body  { font-size: 11pt; line-height: 1.7; white-space: pre-wrap; margin-bottom: 10px; margin-left: 33px; }
+    .doc-step-img   { display: block; max-width: 100%; border-radius: 4px; border: 1px solid #d5c8f5; box-shadow: 0 1px 5px rgba(116,48,255,.12); margin-left: 33px; }
+    .doc-step-caption { font-size: 8.5pt; color: #7a6fa8; text-align: center; margin-top: 4px; font-style: italic; }
+    .doc-overview   { background: #F6F2FF; border-left: 4px solid #C87DE8; padding: 11px 14px; margin-bottom: 18px; font-size: 10.5pt; line-height: 1.7; color: #3d3660; white-space: pre-wrap; }
+
+    /* RACI doc table */
+    .doc-raci-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-top: 6px; }
+    .doc-raci-table th { padding: 6px 9px; background: #F6F2FF; font-weight: 700; text-align: left; border: 1px solid #d5c8f5; color: #3d3660; font-family: 'Titillium Web', sans-serif; }
+    .doc-raci-table td { padding: 6px 9px; border: 1px solid #d5c8f5; }
+    .doc-raci-table tr:nth-child(even) td { background: #faf8ff; }
+    .raci-tag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 8.5pt; font-weight: 700; }
+    .raci-tag.R { background: #ede9ff; color: #5a20e8; }
+    .raci-tag.A { background: #fce7f3; color: #9d174d; }
+    .raci-tag.C { background: #e8f8ee; color: #065f46; }
+    .raci-tag.I { background: #fef3c7; color: #92400e; }
+
+    /* Systemic note in doc */
+    .doc-sistemic-box { background: #f0e8ff; border: 1px solid #C87DE8; border-radius: 6px; padding: 12px 15px; margin-bottom: 20px; }
+    .doc-sistemic-box-title { font-size: 9pt; font-weight: 700; color: #7430FF; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; font-family: 'Titillium Web', sans-serif; }
+    .doc-sistemic-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 10pt; color: #3d3660; }
+    .doc-sistemic-item:last-child { margin-bottom: 0; }
+    .doc-step-raci { margin-left: 33px; margin-top: 6px; }
+    .doc-step-raci-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+    .doc-step-raci span { font-size: 8.5pt; color: #7a6fa8; }
+
+    /* export sidebar */
+    .export-sidebar { position: sticky; top: 66px; height: fit-content; display: flex; flex-direction: column; gap: 11px; }
+    .exp-card { background: var(--white); border-radius: var(--radius); padding: 16px 17px; }
+    .exp-card h3 { font-size: 13px; font-weight: 800; margin-bottom: 11px; font-family: 'Raleway', sans-serif; }
+    .exp-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); cursor: pointer; font-size: 11.5px; font-weight: 600; margin-bottom: 6px; transition: all .18s; font-family: inherit; text-align: left; }
+    .exp-btn:last-child { margin-bottom: 0; }
+    .exp-btn:hover { border-color: var(--blue); background: var(--blue-light); }
+    .exp-icon  { font-size: 18px; flex-shrink: 0; }
+    .exp-lbl   { display: flex; flex-direction: column; }
+    .exp-title { color: var(--text); }
+    .exp-desc  { font-size: 9.5px; color: var(--text-2); font-weight: 400; margin-top: 1px; }
+    .gdocs-steps { font-size: 11px; color: var(--text-2); line-height: 1.8; padding-left: 13px; }
+    .gdocs-steps li { margin-bottom: 1px; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #303134; color: #fff; padding: 9px 18px; border-radius: 7px; font-size: 12.5px; font-weight: 500; z-index: 9999; transition: transform .28s cubic-bezier(.34,1.56,.64,1); white-space: nowrap; pointer-events: none; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── PROCESS BOT ── */
+    #bot-bubble { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+    .bot-toggle { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #7430FF, #C87DE8); border: none; cursor: pointer; box-shadow: 0 4px 18px rgba(116,48,255,.45); display: flex; align-items: center; justify-content: center; font-size: 22px; transition: transform .2s, box-shadow .2s; flex-shrink: 0; }
+    .bot-toggle:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(116,48,255,.55); }
+    .bot-toggle .bot-close-icon { display: none; font-size: 18px; }
+    .bot-open .bot-toggle .bot-main-icon { display: none; }
+    .bot-open .bot-toggle .bot-close-icon { display: block; }
+    .bot-panel { width: 360px; height: 520px; background: var(--white); border-radius: 16px; box-shadow: 0 8px 40px rgba(116,48,255,.22), 0 2px 12px rgba(0,0,0,.12); display: flex; flex-direction: column; overflow: hidden; transform: translateY(20px) scale(.96); opacity: 0; pointer-events: none; transition: transform .25s cubic-bezier(.34,1.2,.64,1), opacity .2s; }
+    .bot-open .bot-panel { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+    .bot-header { background: linear-gradient(135deg, #7430FF 0%, #9b50ff 100%); padding: 14px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .bot-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .bot-header-info { flex: 1; }
+    .bot-name { font-size: 13.5px; font-weight: 800; color: #fff; font-family: 'Raleway', sans-serif; letter-spacing: -.1px; }
+    .bot-subtitle { font-size: 10px; color: rgba(255,255,255,.75); margin-top: 1px; }
+    .bot-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 6px #4ade80; flex-shrink: 0; }
+    .bot-status-dot.loading { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; animation: pulse-dot .8s infinite alternate; }
+    @keyframes pulse-dot { from { opacity: 1; } to { opacity: .3; } }
+    .bot-setup { padding: 16px; border-bottom: 1px solid var(--border); background: var(--blue-light); display: flex; flex-direction: column; gap: 8px; }
+    .bot-setup p { font-size: 11px; color: var(--text-2); line-height: 1.45; }
+    .bot-key-row { display: flex; gap: 6px; }
+    .bot-key-in { flex: 1; border: 1px solid var(--border); border-radius: 5px; padding: 7px 10px; font-size: 12px; outline: none; font-family: inherit; color: var(--text); }
+    .bot-key-in:focus { border-color: var(--blue); }
+    .bot-key-btn { background: var(--blue); color: #fff; border: none; border-radius: 5px; padding: 7px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .bot-key-btn:hover { background: var(--blue-dark); }
+    .bot-key-clear { background: none; border: none; color: var(--text-3); font-size: 10px; cursor: pointer; text-decoration: underline; font-family: inherit; }
+    .bot-messages { flex: 1; overflow-y: auto; padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 10px; }
+    .bot-messages::-webkit-scrollbar { width: 4px; }
+    .bot-messages::-webkit-scrollbar-track { background: transparent; }
+    .bot-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .bot-msg { display: flex; flex-direction: column; gap: 3px; max-width: 88%; }
+    .bot-msg.bot { align-self: flex-start; }
+    .bot-msg.user { align-self: flex-end; }
+    .bot-msg-bubble { padding: 9px 13px; border-radius: 12px; font-size: 12.5px; line-height: 1.55; word-break: break-word; }
+    .bot-msg.bot .bot-msg-bubble { background: var(--bg); color: var(--text); border-bottom-left-radius: 3px; }
+    .bot-msg.user .bot-msg-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 3px; }
+    .bot-msg-time { font-size: 9px; color: var(--text-3); padding: 0 3px; }
+    .bot-msg.user .bot-msg-time { text-align: right; }
+    .bot-typing { display: flex; align-items: center; gap: 4px; padding: 10px 13px; }
+    .bot-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); animation: bounce-dot .9s infinite ease-in-out; }
+    .bot-typing span:nth-child(2) { animation-delay: .15s; }
+    .bot-typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce-dot { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+    .bot-quick { padding: 8px 12px; border-top: 1px solid var(--border); display: flex; gap: 5px; overflow-x: auto; flex-shrink: 0; }
+    .bot-quick::-webkit-scrollbar { display: none; }
+    .bot-chip { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 5px 10px; font-size: 10.5px; font-weight: 600; color: var(--text-2); cursor: pointer; white-space: nowrap; font-family: inherit; transition: all .15s; flex-shrink: 0; }
+    .bot-chip:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+    .bot-input-row { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 7px; align-items: flex-end; flex-shrink: 0; }
+    .bot-ta { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; font-size: 12.5px; line-height: 1.4; resize: none; min-height: 38px; max-height: 90px; outline: none; font-family: inherit; color: var(--text); overflow-y: auto; }
+    .bot-ta:focus { border-color: var(--blue); }
+    .bot-send { width: 36px; height: 36px; border-radius: 50%; background: var(--blue); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; flex-shrink: 0; }
+    .bot-send:hover { background: var(--blue-dark); }
+    .bot-send svg { width: 16px; height: 16px; fill: #fff; }
+    .bot-send:disabled { background: var(--border); cursor: not-allowed; }
+    /* Bot badge (notif) */
+    .bot-badge { position: absolute; top: -3px; right: -3px; width: 16px; height: 16px; border-radius: 50%; background: #f43f5e; border: 2px solid var(--bg); font-size: 9px; font-weight: 700; color: #fff; display: none; align-items: center; justify-content: center; }
+    .bot-badge.show { display: flex; }
+    .bot-toggle { position: relative; }
+    /* Proactive bot message (analysis) */
+    .bot-msg.analysis .bot-msg-bubble { background: #f0e8ff; border: 1px solid #C87DE8; }
+    .bot-analysis-label { font-size: 9px; font-weight: 700; color: #7430FF; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    /* Divider between context groups */
+    .bot-divider { text-align: center; font-size: 9.5px; color: var(--text-3); padding: 4px 0; font-weight: 600; letter-spacing: .3px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1000px) { .dictate-layout { grid-template-columns: 200px 1fr; } .kb-panel { display: none; } }
+    @media (max-width: 800px)  {
+      .mode-grid, .record-layout, .dictate-layout, .preview-layout { grid-template-columns: 1fr; }
+      .template-grid { grid-template-columns: 1fr 1fr; }
+      .rv-body { grid-template-columns: 1fr; }
+      .rv-left { border-right: none; border-bottom: 1px solid var(--border); }
+      .sec-nav, .export-sidebar { position: relative; top: 0; }
+      .doc-paper { padding: 28px 20px; }
+      .form-row { grid-template-columns: 1fr; }
+      .review-top { flex-direction: column; align-items: flex-start; }
+      .steps-nav span:not(.step-num) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎙️ Generador de SOPs <em>Multi D</em></div>
+  <nav class="steps-nav">
+    <button class="step-btn active" id="step-1" onclick="navToStep(1)"><span class="step-num">1</span> Configurar</button>
+    <button class="step-btn" id="step-2" onclick="navToStep(2)"><span class="step-num">2</span> <span id="step2lbl">Grabar</span></button>
+    <button class="step-btn" id="step-3" onclick="navToStep(3)"><span class="step-num">3</span> <span id="step3lbl">Revisar</span></button>
+    <button class="step-btn" id="step-4" onclick="navToStep(4)"><span class="step-num">4</span> Vista Previa</button>
+  </nav>
+</header>
+
+<div class="toast" id="toast"></div>
+<video id="captureVideo" autoplay muted playsinline style="display:none;position:fixed;opacity:0;width:1px;height:1px;top:-999px;pointer-events:none;"></video>
+<canvas id="captureCanvas" style="display:none;"></canvas>
+
+<main>
+
+<!-- ════ SCREEN 1 — HOME ════ -->
+<div class="screen active" id="screen-home">
+  <div class="page-title">
+    <h1>¿Cómo vas a documentar tu proceso?</h1>
+    <p>Cada proceso se documenta con la metodología Multi D: sistema, roles, procesos sin supuestos y criterios de calidad basados en resultados medibles.</p>
+  </div>
+  <div class="mode-grid">
+    <div class="mode-card" id="modeCardDictate" onclick="selectMode('dictate')">
+      <div class="mode-icon">📝</div>
+      <div class="mode-title">Dictar por Sección</div>
+      <div class="mode-desc">Documentá sección a sección con guía sistémica en tiempo real. Ideal para estructurar conocimiento que ya tenés.</div>
+    </div>
+    <div class="mode-card selected-record" id="modeCardRecord" onclick="selectMode('record')">
+      <div class="mode-badge">★ Nuevo</div>
+      <div class="mode-icon">🎬</div>
+      <div class="mode-title">Grabar Pantalla + Narrar</div>
+      <div class="mode-desc">Grabá tu pantalla mientras explicás. Capturá momentos clave y generá un documento con pasos, roles RACI y capturas visuales.</div>
+    </div>
+  </div>
+  <div class="tpl-section hidden" id="tplSection">
+    <div class="tpl-wrap">
+      <div class="tpl-wrap-title">Plantilla de Documento</div>
+      <div class="template-grid">
+        <div class="tpl-card selected" data-tpl="sop" onclick="selectTpl('sop',this)"><div class="tpl-icon">📋</div><div class="tpl-name">SOP</div><div class="tpl-desc">Procedimiento Operativo Estándar</div></div>
+        <div class="tpl-card" data-tpl="flujo" onclick="selectTpl('flujo',this)"><div class="tpl-icon">🔄</div><div class="tpl-name">Flujo de Proceso</div><div class="tpl-desc">De inicio a fin con actores</div></div>
+        <div class="tpl-card" data-tpl="checklist" onclick="selectTpl('checklist',this)"><div class="tpl-icon">✅</div><div class="tpl-name">Checklist</div><div class="tpl-desc">Lista de verificación operacional</div></div>
+        <div class="tpl-card" data-tpl="manual" onclick="selectTpl('manual',this)"><div class="tpl-icon">📖</div><div class="tpl-name">Manual</div><div class="tpl-desc">Documentación completa</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <h2>Información del Documento</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Empresa / Área</label><input id="f-company" type="text" placeholder="Ej: Empresa ABC – Operaciones"></div>
+      <div class="form-group"><label>Nombre del Proceso *</label><input id="f-process" type="text" placeholder="Ej: Onboarding de Nuevos Clientes"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Responsable Final (Accountable)</label><input id="f-author" type="text" placeholder="Quien responde por el resultado"></div>
+      <div class="form-group"><label>Departamento / Sistema Mayor</label><input id="f-dept" type="text" placeholder="Ej: Ventas → CRM → Operaciones"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Versión</label><input id="f-version" type="text" value="1.0"></div>
+      <div class="form-group"><label>Fecha</label><input id="f-date" type="date"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary btn-lg" onclick="startApp()">Comenzar →</button></div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 2 — RECORD ════ -->
+<div class="screen" id="screen-record">
+  <div class="record-layout">
+    <div class="record-main">
+      <div class="rec-controls">
+        <div class="rec-dot" id="recDot"></div>
+        <span class="rec-status" id="recStatus">Listo para grabar</span>
+        <div class="rec-timer" id="recTimer">00:00</div>
+        <div class="rec-spacer"></div>
+        <button class="btn btn-ghost btn-sm" id="btnPause" onclick="pauseResume()" style="display:none;">⏸ Pausar</button>
+        <button class="btn btn-danger btn-sm" id="btnStop" onclick="stopRec()" style="display:none;">⏹ Finalizar</button>
+      </div>
+      <div class="screen-preview-wrap">
+        <video id="screenPreviewVideo" autoplay muted playsinline></video>
+        <div class="start-overlay" id="startOverlay">
+          <div class="ov-icon">🎬</div>
+          <p class="ov-text">Compartí tu pantalla y narrá el proceso. La app captura el texto y la imagen en cada paso que marques.</p>
+          <button class="btn-start-rec" onclick="startRec()">● Iniciar Grabación</button>
+          <p class="ov-note">Chrome te pedirá elegir qué pantalla compartir. El micrófono se activa automáticamente.</p>
+        </div>
+      </div>
+      <div class="tl-card">
+        <div class="tl-label"><div class="tl-dot" id="tlDot"></div>Narración en Vivo</div>
+        <div class="tl-text" id="tlText"><span class="tl-placeholder">El texto de tu narración aparece aquí en tiempo real…</span></div>
+      </div>
+    </div>
+    <div class="steps-sidebar">
+      <div class="capture-card">
+        <h3>📸 Capturar Paso</h3>
+        <button class="btn-capture" id="btnCapture" onclick="captureStep()" disabled>📸 Capturar Pantalla + Texto</button>
+        <label class="auto-row" onclick="toggleAuto()">
+          <div class="tog" id="togAuto"><div class="tog-k"></div></div>
+          <span id="autoLbl">Auto-captura (apagada)</span>
+        </label>
+      </div>
+      <div class="captured-list">
+        <div class="cl-header"><span>Pasos capturados</span><span class="cl-count" id="clCount">0</span></div>
+        <div class="cl-scroll"><div id="clBody"><div class="cl-empty">Aún no hay pasos.<br>Iniciá la grabación y presioná Capturar.</div></div></div>
+      </div>
+      <button class="btn btn-green" id="btnGoReview" style="width:100%;justify-content:center;" onclick="goToReview()" disabled>Revisar Pasos →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 3 — REVIEW ════ -->
+<div class="screen" id="screen-review">
+  <div class="review-top">
+    <div class="review-top-info">
+      <h2 id="rvTitle">Revisar y Editar Pasos</h2>
+      <p id="rvSubtitle">Asigná roles RACI a cada paso y agregá observaciones sistémicas antes de generar el documento.</p>
+    </div>
+    <div class="review-top-actions">
+      <button class="btn btn-ghost" onclick="goScreen('record')">← Volver a Grabar</button>
+      <button class="btn btn-primary btn-lg" onclick="generateDoc()">Generar Documento →</button>
+    </div>
+  </div>
+  <div class="review-list" id="rvList"></div>
+  <button class="add-step-btn" onclick="addEmptyStep()">+ Agregar Paso Manual</button>
+  <div class="btn-row" style="margin-top:16px;">
+    <button class="btn btn-ghost" onclick="goScreen('record')">← Volver a Grabar</button>
+    <button class="btn btn-primary btn-lg" onclick="generateDoc()">Generar Documento →</button>
+  </div>
+</div>
+
+<!-- ════ SCREEN 2b — DICTATE ════ -->
+<div class="screen" id="screen-dictate">
+  <div class="dictate-layout">
+    <div class="sec-nav">
+      <div class="sec-nav-title">Secciones</div>
+      <div id="secNavList"></div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="progress-label" id="progressLabel">0 / 0 completadas</div>
+      </div>
+    </div>
+    <div class="dictate-panel">
+      <div class="sec-header">
+        <div class="sec-badge" id="secBadge">Sección 1 de X</div>
+        <div class="sec-title" id="secTitle">–</div>
+        <div class="sec-hint"  id="secHint">–</div>
+      </div>
+      <div class="mic-area">
+        <div class="tbox" id="tbox"><span class="t-placeholder">Presioná el micrófono y empezá a hablar…</span></div>
+        <div class="mic-row">
+          <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎙️</button>
+          <div class="mic-info">
+            <strong id="micLabel">Listo para escuchar</strong>
+            <span id="micSub">Hacé clic en el micrófono para empezar</span>
+          </div>
+        </div>
+      </div>
+      <div class="content-card">
+        <h3>Contenido de la Sección</h3>
+        <textarea class="content-ta" id="sectionContent" rows="6" placeholder="El dictado aparece aquí. También podés escribir o editar directamente."></textarea>
+        <div class="btn-row" style="margin-top:11px;">
+          <button class="btn btn-ghost" id="btnPrevSec" onclick="prevSec()">← Anterior</button>
+          <button class="btn btn-ghost" onclick="clearSec()">Limpiar</button>
+          <button class="btn btn-primary" id="btnNextSec" onclick="nextSec()">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KB Panel -->
+    <div class="kb-panel" id="kbPanel">
+      <!-- Filled dynamically by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 4 — PREVIEW ════ -->
+<div class="screen" id="screen-preview">
+  <div class="preview-layout">
+    <div class="doc-wrap"><div class="doc-paper" id="docPaper"></div></div>
+    <div class="export-sidebar">
+      <div class="exp-card">
+        <h3>📤 Exportar</h3>
+        <button class="exp-btn" onclick="exportDoc()">
+          <span class="exp-icon">📄</span><span class="exp-lbl"><span class="exp-title">Descargar .DOC</span><span class="exp-desc">Con capturas e info RACI embebidas</span></span>
+        </button>
+        <button class="exp-btn" onclick="copyFormatted()">
+          <span class="exp-icon">📋</span><span class="exp-lbl"><span class="exp-title">Copiar con Formato</span><span class="exp-desc">Pegá en Google Docs con Ctrl+V</span></span>
+        </button>
+        <button class="exp-btn" onclick="printDoc()">
+          <span class="exp-icon">🖨️</span><span class="exp-lbl"><span class="exp-title">Imprimir / PDF</span><span class="exp-desc">Guardá como PDF completo</span></span>
+        </button>
+      </div>
+      <div class="exp-card">
+        <h3>✏️ Editar</h3>
+        <button class="btn btn-outline" style="width:100%;justify-content:center;margin-bottom:6px;" id="btnBackEdit" onclick="backToEdit()">← Volver a Editar</button>
+        <button class="btn btn-ghost"   style="width:100%;justify-content:center;" onclick="resetApp()">↩ Nuevo Documento</button>
+      </div>
+      <div class="exp-card">
+        <h3>💡 Abrir en Google Docs</h3>
+        <ol class="gdocs-steps">
+          <li>Descargá el <strong>.DOC</strong></li>
+          <li>Abrí <strong>drive.google.com</strong></li>
+          <li>Arrastrá el archivo a Drive</li>
+          <li>Clic derecho → <strong>Abrir con Google Docs</strong></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ════ PROCESS BOT ════ -->
+<div id="bot-bubble">
+  <div class="bot-panel" id="botPanel">
+    <div class="bot-header">
+      <div class="bot-avatar">🤖</div>
+      <div class="bot-header-info">
+        <div class="bot-name">Process Bot</div>
+        <div class="bot-subtitle">Asistente de documentación — Multi D</div>
+      </div>
+      <div class="bot-status-dot" id="botStatusDot"></div>
+    </div>
+    <div class="bot-setup" id="botSetup">
+      <p>Ingresá tu API Key de Anthropic para activar el Process Bot. Se guarda solo en tu navegador.</p>
+      <div class="bot-key-row">
+        <input class="bot-key-in" type="password" id="botKeyIn" placeholder="sk-ant-api03-..." />
+        <button class="bot-key-btn" onclick="saveApiKey()">Activar</button>
+      </div>
+    </div>
+    <div class="bot-messages" id="botMessages"></div>
+    <div class="bot-quick" id="botQuick">
+      <button class="bot-chip" onclick="botQuickSend('¿Cómo estructuro los pasos de este proceso?')">¿Cómo estructuro los pasos?</button>
+      <button class="bot-chip" onclick="botQuickSend('¿Quién debería ser el Accountable de este proceso?')">¿Quién es el Accountable?</button>
+      <button class="bot-chip" onclick="botQuickSend('¿Qué señales de control debería documentar?')">Señales de control</button>
+      <button class="bot-chip" onclick="botQuickSend('¿Cómo identifico un cuello de botella en este proceso?')">Cuellos de botella</button>
+      <button class="bot-chip" onclick="botQuickSend('¿Qué supuestos puede tener este proceso?')">¿Qué supuestos hay?</button>
+    </div>
+    <div class="bot-input-row">
+      <textarea class="bot-ta" id="botInput" placeholder="Preguntale al Process Bot…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();botSend();}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px'"></textarea>
+      <button class="bot-send" id="botSendBtn" onclick="botSend()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="bot-toggle" onclick="toggleBot()" title="Process Bot — Asistente Multi D">
+    <span class="bot-main-icon">🤖</span>
+    <span class="bot-close-icon">✕</span>
+    <div class="bot-badge" id="botBadge"></div>
+  </button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  KNOWLEDGE BASE — Metodología Multi D + Pensamiento Sistémico + RACI
+//  Fuente: conocimiento_multid.md + bases_pensamiento_sistemico.md + roles_y_responsabilidades.md
+// ═══════════════════════════════════════════════════════════════════
+
+// ── METODOLOGÍA MULTI D (base de conocimiento propia) ──────────────
+const MULTID = {
+  // Definiciones core
+  proceso: {
+    def: 'Una secuencia ordenada de acciones para producir un resultado. Una serie de pasos que, si se siguen, conducen al resultado sin importar quién los ejecute.',
+    ingredientes: ['Pasos en orden exacto', 'Ingredientes/recursos exactos', 'Orden de ejecución', 'Condiciones previas (temperatura)', 'Señales de control a mirar'],
+    objetivo: 'Estandarizar la forma de hacer las cosas. Sin procesos, cada persona hace las cosas a su manera.',
+    errorPrincipal: 'Los supuestos: lo que "se asume" que alguien sabe. Con procesos no hay supuestos, hay paso 1, paso 2, paso 3.'
+  },
+  sistema: {
+    def: 'Conjunto de elementos y procesos que interactúan entre sí produciendo un resultado.',
+    elementos: ['Input (lo que entra)', 'Procesos (actividades sobre el input)', 'Output (el resultado)', 'Feedback (información del resultado)', 'Contexto (condiciones y reglas del sistema)'],
+    principio: 'El sistema genera su propio comportamiento. Si un problema se repite, es sistemático, no personal.'
+  },
+  problemaSistematico: {
+    señal: 'El problema se repite una y otra vez = señal de falla en el diseño del sistema, no en la persona.',
+    tipos: ['Cuello de botella: punto angosto del subsistema que limita el flujo', 'Problema del macrosistema: rediseño estructural completo necesario'],
+    regla: 'Antes de culpar a la persona, preguntarse: ¿el proceso existe? ¿está documentado? ¿el rol tiene claridad?'
+  },
+  diseñoProceso: {
+    prerequisito: 'Tener organigrama, roles y responsabilidades definidos. Sin esta base, documentar procesos genera una ensalada de roles mezclados.',
+    pasos: ['1. Nombrar las responsabilidades del rol (partir de responsabilidades, no de "todo lo que hace")', '2. Detallar cada responsabilidad como proceso específico', '3. Armar flujograma (ruta visual del proceso)', '4. Definir cadencia (cada cuándo se ejecuta)', '5. Establecer KPIs de resultado']
+  },
+  calidad: [
+    'Tiene un responsable claro (no "el equipo")',
+    'Especifica condiciones previas',
+    'Incluye señales de control en cada paso',
+    'No tiene supuestos — todo está escrito',
+    'Define cadencia (cuándo y con qué frecuencia)',
+    'Tiene KPI de resultado',
+    'Está conectado a un rol específico',
+    'Documenta qué hacer cuando falla'
+  ],
+  erroresComunes: [
+    'Arrancar sin claridad de roles y responsabilidades',
+    'Mezclar roles y funciones en el mismo proceso',
+    'Mirar a la persona antes que al proceso cuando algo falla',
+    'Documentar "qué hacer" sin documentar "para qué"',
+    'No documentar las señales de control',
+    'Dejar supuestos sin documentar'
+  ]
+};
+
+const KB = {
+
+  // Principios sistémicos por sección de documento
+  bySection: {
+    objetivo: {
+      principle: { name: 'Propósito del Sistema', icon: '🎯' },
+      text: 'El objetivo es el resultado que este proceso garantiza. Un proceso existe para estandarizar una forma de hacer las cosas y bajar el margen de error — no para describir actividades.',
+      questions: [
+        '¿Qué resultado garantiza si se sigue correctamente?',
+        '¿A qué área o unidad de negocio sirve este proceso?',
+        '¿Cómo se mide que el objetivo fue alcanzado? (KPI)',
+        '¿Qué problema sistemático resuelve o previene?'
+      ]
+    },
+    proposito: {
+      principle: { name: 'Propósito del Sistema', icon: '🎯' },
+      text: 'El propósito conecta el proceso con el output que recibe quien depende de él. Sin propósito claro, ante una excepción el ejecutor no sabe cómo decidir.',
+      questions: [
+        '¿A quién sirve directamente este checklist?',
+        '¿Qué problema sistemático previene? (¿qué se repite sin él?)',
+        '¿Cuándo exactamente se activa y quién lo activa?'
+      ]
+    },
+    alcance: {
+      principle: { name: 'Límites del Sistema', icon: '🔲' },
+      text: 'Los límites definen dónde empieza y termina la responsabilidad. La ambigüedad de alcance es la causa más frecuente de supuestos — el enemigo número uno de la delegación.',
+      questions: [
+        '¿Cuál es el input que dispara este proceso?',
+        '¿Cuál es el output que marca que terminó?',
+        '¿Qué situaciones quedan fuera del alcance?',
+        '¿Quién maneja lo que queda fuera?'
+      ]
+    },
+    descripcion: {
+      principle: { name: 'Visión del Sistema', icon: '🔭' },
+      text: 'Antes de describir el flujo, identificar el input que recibe y el output que entrega. Los sistemas son fractales: este flujo es un subsistema dentro de un sistema mayor.',
+      questions: [
+        '¿Qué input recibe este flujo (de dónde viene)?',
+        '¿Qué output entrega y a quién?',
+        '¿Qué áreas son afectadas si este flujo se rompe?'
+      ]
+    },
+    responsables: {
+      principle: { name: 'Roles y Responsabilidades', icon: '👥' },
+      text: 'Cada proceso necesita un responsable claro. El error más común: documentar procesos sin tener claridad de roles primero. Sin roles definidos, el proceso no sabe a quién le habla.',
+      questions: [
+        '¿A qué rol corresponde este proceso?',
+        '¿Quién responde si el resultado falla? (Accountable — solo uno)',
+        '¿Quién ejecuta los pasos? (Responsible)',
+        '¿A quién consultar si surge una duda? (Consulted)',
+        '¿Quién debe saber que esto ocurrió? (Informed)'
+      ]
+    },
+    actores: {
+      principle: { name: 'Interrelaciones del Sistema', icon: '🕸️' },
+      text: 'Los actores incluyen a quienes dan el input y quienes reciben el output, no solo quien ejecuta. Un actor mal identificado es una fuente de supuestos no documentados.',
+      questions: [
+        '¿Quién da el input que activa este proceso?',
+        '¿Quién recibe el output de este proceso?',
+        '¿Hay actores externos (clientes, proveedores) que impactan el flujo?',
+        '¿Quién puede bloquear el proceso si no está alineado?'
+      ]
+    },
+    pasos: {
+      principle: { name: 'Receta del Proceso', icon: '📋' },
+      text: 'Un proceso es como una receta: pasos en orden, ingredientes exactos, condiciones de ejecución y señales para saber si salió bien. Sin señales de control, el error pasa al siguiente paso sin que nadie lo detecte.',
+      questions: [
+        '¿Cada paso tiene un responsable claro?',
+        '¿Qué señal indica que cada paso salió bien?',
+        '¿Hay algún paso que depende de información de otro proceso?',
+        '¿Qué pasa si un paso no puede completarse? (¿hay supuesto ahí?)',
+        '¿Hay pasos redundantes que se pueden eliminar?'
+      ]
+    },
+    etapas: {
+      principle: { name: 'Cuellos de Botella', icon: '⏱️' },
+      text: 'Los cuellos de botella son los puntos angostos del proceso donde el flujo se frena. Identificarlos por etapa permite saber exactamente dónde intervenir para mejorar el sistema.',
+      questions: [
+        '¿Qué etapa concentra más tiempo de espera?',
+        '¿Hay etapas donde la aprobación o información se acumula?',
+        '¿Qué etapa, si falla, para todo el proceso aguas abajo?',
+        '¿Con qué KPI se mide el rendimiento de cada etapa?'
+      ]
+    },
+    procedimiento: {
+      principle: { name: 'Estándar de Ejecución', icon: '🔄' },
+      text: 'El procedimiento es la única forma correcta de hacer la tarea. Incluye no solo el camino exitoso sino también qué hacer cuando algo sale mal — sin eso, ante una excepción cada persona improvisa a su manera.',
+      questions: [
+        '¿Cada paso tiene criterio de completitud claro?',
+        '¿Qué condiciones previas deben cumplirse para iniciar?',
+        '¿Existen caminos alternativos documentados (excepciones)?',
+        '¿Hay supuestos que todavía no están escritos en este procedimiento?'
+      ]
+    },
+    verificacion: {
+      principle: { name: 'Señales de Control', icon: '⚖️' },
+      text: 'La verificación son las "señales a mirar" del proceso — cómo saber que el resultado salió bien. Debe medir el output real, no la actividad. Un KPI confirma que el proceso cumplió su objetivo.',
+      questions: [
+        '¿La verificación mide el resultado o solo que la actividad se hizo?',
+        '¿Cuál es el KPI que confirma que este proceso funcionó?',
+        '¿Quién verifica y es independiente de quien ejecutó?',
+        '¿Qué se hace cuando la verificación detecta un problema?'
+      ]
+    },
+    previo: {
+      principle: { name: 'Demoras (Delays)', icon: '⏱️' },
+      text: 'Las verificaciones previas existen porque hay demoras entre preparar y ejecutar. Identificar qué puede cambiar entre la preparación y el momento de ejecución.',
+      questions: [
+        '¿Cuánto tiempo antes del inicio se hacen estas verificaciones?',
+        '¿Algún elemento puede cambiar entre la verificación y el inicio?',
+        '¿Quién verifica y quién aprueba son el mismo rol?'
+      ]
+    },
+    durante: {
+      principle: { name: 'Puntos de Apalancamiento', icon: '🔩' },
+      text: 'Los puntos de control durante la ejecución son palancas de alto impacto. Un control bien ubicado previene errores costosos aguas abajo.',
+      questions: [
+        '¿Cuál es el punto de control más crítico?',
+        '¿Qué pasa si se omite algún ítem de esta lista?',
+        '¿El ejecutor tiene autoridad para detener el proceso si detecta un problema?'
+      ]
+    },
+    posterior: {
+      principle: { name: 'Propósito Real', icon: '✅' },
+      text: 'Las verificaciones posteriores confirman que el propósito real del proceso fue cumplido, no solo que las actividades fueron completadas.',
+      questions: [
+        '¿Las verificaciones posteriores confirman el resultado para el cliente/destinatario?',
+        '¿Se documentan los desvíos para aprendizaje sistémico?',
+        '¿Quién recibe la confirmación de cierre?'
+      ]
+    },
+    inicio: {
+      principle: { name: 'Triggers del Sistema', icon: '▶️' },
+      text: 'El evento de inicio define los límites del sistema. Un trigger mal definido hace que el proceso arranque en el momento equivocado o por las personas equivocadas.',
+      questions: [
+        '¿El trigger es automático o manual?',
+        '¿Quién tiene autoridad para activar este proceso?',
+        '¿Puede el proceso iniciarse accidentalmente?'
+      ]
+    },
+    decisiones: {
+      principle: { name: 'Arquetipo: Soluciones que Fallan', icon: '⚠️' },
+      text: 'Los puntos de decisión son donde aparecen los arquetipos sistémicos. Si siempre se toma el mismo camino "rápido", puede haber un arquetipo de "desplazamiento de la carga".',
+      questions: [
+        '¿Las decisiones tienen criterios explícitos o dependen del criterio personal?',
+        '¿Hay decisiones que siempre las toma la misma persona (cuello de botella)?',
+        '¿Existen decisiones que nadie sabe cómo tomar (brecha de responsabilidad)?'
+      ]
+    },
+    cierre: {
+      principle: { name: 'Límites del Sistema', icon: '🔲' },
+      text: 'La condición de cierre es tan importante como el inicio. Un proceso que no cierra formalmente genera stocks no resueltos que bloquean procesos downstream.',
+      questions: [
+        '¿Existe una señal inequívoca de que el proceso terminó?',
+        '¿A quién se notifica el cierre? (I)',
+        '¿Qué documentos o registros quedan como evidencia del cierre?'
+      ]
+    },
+    materiales: {
+      principle: { name: 'Stocks y Recursos', icon: '📦' },
+      text: 'Los recursos son stocks que se consumen. Identificar cuáles son críticos permite diseñar alertas antes de que el proceso se bloquee por falta de recursos.',
+      questions: [
+        '¿Existe riesgo de que un recurso no esté disponible?',
+        '¿Quién es responsable de garantizar la disponibilidad?',
+        '¿Hay recursos compartidos con otros procesos?'
+      ]
+    },
+    recursos: {
+      principle: { name: 'Stocks y Recursos', icon: '📦' },
+      text: 'Los sistemas, accesos y herramientas son stocks tecnológicos. Documentar dependencias tecnológicas críticas reduce la fragilidad del proceso.',
+      questions: [
+        '¿Qué pasa si un sistema no está disponible?',
+        '¿Hay single points of failure tecnológicos?',
+        '¿Los accesos son gestionados por un rol específico?'
+      ]
+    },
+    notas: {
+      principle: { name: 'Problema Sistemático', icon: '⚠️' },
+      text: 'Si un error se repite, es una señal de problema sistemático — no de actitud ni de talento de la persona. Documentar la causa de raíz (el diseño del proceso o del rol) genera aprendizaje real y evita que el problema vuelva.',
+      questions: [
+        '¿Este error se repite siempre de la misma forma? (señal de problema sistemático)',
+        '¿La causa está en el proceso o en la falta de claridad del rol?',
+        '¿Hay un supuesto no documentado que genera el error?',
+        '¿La "solución" actual ataca el síntoma o la causa del sistema?'
+      ]
+    },
+    excepciones: {
+      principle: { name: 'Supuestos y Escalamiento', icon: '📶' },
+      text: 'Las excepciones son el momento donde el ejecutor no sabe qué hacer — el supuesto más peligroso. Si no hay ruta de excepción documentada, cada persona improvisa y el proceso se ejecuta de formas distintas.',
+      questions: [
+        '¿Qué condición dispara la excepción?',
+        '¿A quién se escala y en qué condiciones exactas?',
+        '¿El ejecutor tiene autoridad para pausar el proceso?',
+        '¿Las excepciones se registran para mejorar el proceso después?'
+      ]
+    },
+    intro: {
+      principle: { name: 'Contexto del Sistema', icon: '🌱' },
+      text: 'La introducción responde "por qué existe este proceso". El ejecutor que entiende el propósito toma mejores decisiones ante situaciones no documentadas. El que solo sabe "qué hacer" improvisa cuando algo se sale del guión.',
+      questions: [
+        '¿Qué problema sistemático resuelve este proceso?',
+        '¿A qué área o unidad de negocio pertenece?',
+        '¿Quién se beneficia directamente de que este proceso exista?',
+        '¿Qué pasaba antes de que existiera este proceso?'
+      ]
+    },
+    conceptos: {
+      principle: { name: 'Vocabulario Compartido', icon: '🧠' },
+      text: 'Sin vocabulario compartido, cada persona ejecuta su propia versión del proceso. Los conceptos eliminan los supuestos de "todos saben qué significa X".',
+      questions: [
+        '¿Hay términos que se usan de forma inconsistente en el equipo?',
+        '¿Existen siglas o jerga interna que un nuevo integrante no entendería?',
+        '¿Hay definiciones que parecen obvias pero generan confusión en la práctica?'
+      ]
+    },
+    errores: {
+      principle: { name: 'Causa Raíz — No la Persona', icon: '🔍' },
+      text: 'Los errores frecuentes son síntomas de un proceso mal diseñado, de un rol sin claridad o de un supuesto no documentado. Documentar la causa sistemática (no el síntoma) es lo que permite mejorar el sistema.',
+      questions: [
+        '¿Este error se repite? → Es sistemático, no personal',
+        '¿Hay un supuesto no documentado que genera el error?',
+        '¿El proceso tiene señales de control que deberían haber detectado este error?',
+        '¿La "solución" que se aplica ataca el síntoma o rediseña el proceso?'
+      ]
+    },
+    contactos: {
+      principle: { name: 'Red de Consulta', icon: '📞' },
+      text: 'Documentar a quién consultar es tan crítico como documentar qué hacer. Cuando el ejecutor no sabe a quién preguntar, el proceso se frena — ese es un cuello de botella de consulta que se puede prevenir.',
+      questions: [
+        '¿Hay una persona que concentra demasiadas consultas? (cuello de botella)',
+        '¿Qué pasa cuando esa persona no está disponible?',
+        '¿Existen backups documentados para cada punto de consulta?',
+        '¿Esta red de consulta está en el Playbook central del área?'
+      ]
+    }
+  },
+
+  // Criterios de calidad — Metodología Multi D
+  quality: [
+    { id: 'q1', text: 'Tiene un responsable claro (no "el equipo")' },
+    { id: 'q2', text: 'Input y output definidos (dónde empieza y termina)' },
+    { id: 'q3', text: 'Roles RACI identificados (R, A, C, I)' },
+    { id: 'q4', text: 'Sin supuestos — todo lo que podría asumirse está escrito' },
+    { id: 'q5', text: 'Señales de control en los pasos clave' },
+    { id: 'q6', text: 'Cadencia definida (cuándo y con qué frecuencia se ejecuta)' },
+    { id: 'q7', text: 'KPI que confirma que el proceso cumplió su objetivo' },
+    { id: 'q8', text: 'Ruta de excepción documentada (qué hacer si falla)' }
+  ],
+
+  // RACI quick reference
+  raci: {
+    R: { letter: 'R', label: 'Responsible', desc: '¿Quién tiene las manos en la tarea? (puede haber varios)', color: 'r' },
+    A: { letter: 'A', label: 'Accountable', desc: '¿Quién responde si falla? (uno solo por paso)',            color: 'a' },
+    C: { letter: 'C', label: 'Consulted',   desc: '¿A quién hay que preguntar antes de avanzar?',            color: 'c' },
+    I: { letter: 'I', label: 'Informed',    desc: '¿Quién debe saber que esto ocurrió?',                     color: 'i' }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  TEMPLATES — Metodología Multi D
+// ═══════════════════════════════════════════════════════════════════
+const TPLS = {
+  sop: {
+    label: 'Procedimiento Operativo Estándar (SOP)',
+    sections: [
+      { id:'objetivo',     title:'Objetivo del Proceso',       hint:'¿Qué resultado garantiza este proceso si se sigue correctamente? ¿A qué área o unidad de negocio sirve? ¿Qué KPI confirma que el objetivo fue cumplido?', type:'text' },
+      { id:'alcance',      title:'Alcance y Límites',          hint:'¿Qué input dispara este proceso? ¿Cuál es el output que marca que terminó? ¿Qué situaciones quedan FUERA del alcance? ¿A qué rol aplica?', type:'text' },
+      { id:'responsables', title:'Responsables (RACI)',        hint:'Definí: quién ejecuta (R), quién responde por el resultado si falla (A — uno solo), a quién consultar antes de avanzar (C), quién debe saber que ocurrió (I). Evitá "el equipo" — nombrá el rol.', type:'text' },
+      { id:'materiales',   title:'Recursos y Herramientas',    hint:'Sistemas, accesos, documentos y herramientas necesarias. ¿Están en el Playbook? ¿Cuáles son críticos? ¿Qué pasa si alguno no está disponible?', type:'text' },
+      { id:'pasos',        title:'Pasos del Procedimiento',    hint:'Como una receta: decí "primer paso… segundo paso…" para numerarlos. Cada paso debe tener un responsable y una señal de control (cómo saber que salió bien). Incluí qué hacer si un paso falla.', type:'steps' },
+      { id:'verificacion', title:'Verificación y Control',     hint:'¿Cuál es el KPI que confirma que el proceso cumplió su objetivo? ¿Quién verifica (debe ser distinto a quien ejecutó)? ¿Qué señales hay que mirar?', type:'text' },
+      { id:'notas',        title:'Errores Frecuentes y Causa Raíz', hint:'Si el error se repite, es sistemático. Documentá el error + la causa en el diseño del proceso o del rol (no la persona). ¿Hay un supuesto no documentado que genera el error?', type:'text' },
+    ]
+  },
+  flujo: {
+    label: 'Flujo de Trabajo',
+    sections: [
+      { id:'descripcion', title:'Descripción del Flujo',       hint:'¿En qué consiste? ¿Qué input recibe y de dónde? ¿Qué output entrega y a quién? ¿A qué macrosistema pertenece este flujo?', type:'text' },
+      { id:'inicio',      title:'Evento de Inicio (Trigger)',  hint:'¿Qué activa este flujo? ¿Es automático o manual? ¿Quién tiene autoridad para iniciarlo? ¿Con qué cadencia se ejecuta?', type:'text' },
+      { id:'actores',     title:'Actores y Roles',             hint:'Listá: quién ejecuta (R), quién responde por el resultado (A), quién consultar antes de avanzar (C), quién debe saber (I). Incluí actores externos si los hay.', type:'text' },
+      { id:'etapas',      title:'Etapas del Flujo',            hint:'Describí cada etapa en orden. ¿Qué etapa puede ser cuello de botella? ¿Dónde puede acumularse trabajo sin procesar? ¿Con qué señal se sabe que cada etapa está completa?', type:'steps' },
+      { id:'decisiones',  title:'Puntos de Decisión',          hint:'¿Cuáles son los criterios de cada decisión? ¿Están explícitos o dependen del criterio personal? (Si dependen del criterio personal, hay un supuesto.) ¿Quién tiene autoridad para decidir?', type:'text' },
+      { id:'cierre',      title:'Condición de Cierre',         hint:'¿Cuál es la señal inequívoca de que el flujo terminó (el output)? ¿A quién se notifica? ¿Qué registro queda como evidencia del cierre?', type:'text' },
+    ]
+  },
+  checklist: {
+    label: 'Checklist Operacional',
+    sections: [
+      { id:'proposito',   title:'Propósito y Activación',      hint:'¿Para qué sirve este checklist? ¿Qué problema sistemático previene? ¿Cuándo exactamente se activa y quién debe completarlo?', type:'text' },
+      { id:'previo',      title:'Verificaciones Previas',      hint:'¿Qué condiciones deben estar listas antes de iniciar? (temperatura del proceso). Considerá: accesos, materiales, personas disponibles, sistemas activos.', type:'checklist' },
+      { id:'durante',     title:'Señales de Control (Durante)',hint:'Puntos críticos de control durante la ejecución — las señales a mirar. ¿Hay alguna señal que si se omite permite que el error pase al siguiente paso?', type:'checklist' },
+      { id:'posterior',   title:'Verificación del Output',     hint:'¿El output del proceso es el esperado? ¿El KPI confirma que funcionó? ¿A quién se notifica el cierre? ¿Qué registro queda?', type:'checklist' },
+      { id:'excepciones', title:'Excepciones y Escalamiento',  hint:'¿Qué hacer si un ítem no puede completarse? ¿A quién se escala y bajo qué condiciones? ¿El ejecutor puede pausar el proceso? ¿Dónde se registra la excepción?', type:'text' },
+    ]
+  },
+  manual: {
+    label: 'Manual de Proceso',
+    sections: [
+      { id:'intro',        title:'Por qué existe este proceso', hint:'¿Qué problema sistemático resuelve? ¿Qué pasaba antes sin este proceso? ¿A qué área o unidad de negocio pertenece? ¿Quién debe conocerlo?', type:'text' },
+      { id:'conceptos',    title:'Conceptos y Definiciones',    hint:'Vocabulario compartido que elimina supuestos. Términos técnicos, siglas, nombres internos. Si un nuevo integrante no lo entendería, va acá.', type:'text' },
+      { id:'procedimiento',title:'Procedimiento Detallado',     hint:'Paso a paso con responsable por etapa. Incluí condiciones previas, señales de control y caminos alternativos cuando algo falla. Sin supuestos.', type:'steps' },
+      { id:'recursos',     title:'Recursos y Accesos',          hint:'Sistemas, credenciales, documentos y herramientas. ¿Están en el Playbook? ¿Cuáles son críticos? ¿Quién gestiona los accesos?', type:'text' },
+      { id:'errores',      title:'Errores Frecuentes y Causa del Sistema', hint:'Si el error se repite, hay un problema sistemático. Documentá la causa en el diseño del proceso o del rol, no en la persona. ¿Qué supuesto genera el error?', type:'text' },
+      { id:'contactos',    title:'Red de Consulta y Escalamiento', hint:'¿A quién consultar en cada situación? ¿Hay un cuello de botella de consulta (siempre la misma persona)? ¿Qué pasa si ese contacto no está disponible?', type:'text' },
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════════════════════════════
+const APP = {
+  mode: 'record', tpl: 'sop', meta: {},
+  qualityChecks: {},  // { q1: true, q2: false, ... }
+  D: { sections: [], idx: 0, rec: null, listening: false, finalText: '' },
+  R: {
+    screenStream: null, isRecording: false, isPaused: false,
+    startTime: null, elapsed: 0, timerInterval: null, pauseStart: null, totalPause: 0,
+    recog: null, isListening: false,
+    fullTranscript: '', segmentText: '', interimText: '',
+    autoCapture: false, autoTimer: null,
+    steps: [] // { id, time, timeLabel, screenshot, thumbnail, text, title, raci:{R,A,C,I}, obs }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+  // Init quality checks state
+  KB.quality.forEach(q => { APP.qualityChecks[q.id] = false; });
+  updateNavLabels();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════════════
+const STEP_MAP = {
+  record:  { home:1, record:2, review:3, preview:4, dictate:2 },
+  dictate: { home:1, dictate:2, preview:3, record:2, review:3 }
+};
+
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const map = STEP_MAP[APP.mode], cur = map[name] || 1;
+  document.getElementById('step-4').classList.toggle('hidden', APP.mode === 'dictate');
+  [1,2,3,4].forEach(n => {
+    const el = document.getElementById('step-' + n); if (!el) return;
+    el.classList.remove('active','done');
+    if (n === cur) el.classList.add('active');
+    else if (n < cur) el.classList.add('done');
+  });
+  updateNavLabels();
+  if (name === 'preview') renderPreview();
+}
+
+function updateNavLabels() {
+  const r = APP.mode === 'record';
+  const s2 = document.getElementById('step2lbl'), s3 = document.getElementById('step3lbl');
+  if (s2) s2.textContent = r ? 'Grabar'  : 'Dictar';
+  if (s3) s3.textContent = r ? 'Revisar' : 'Vista Previa';
+  document.getElementById('step-4').classList.toggle('hidden', !r);
+}
+
+function navToStep(n) {
+  if (n === 1) { goScreen('home'); return; }
+  if (APP.mode === 'dictate') {
+    if (n === 2 && APP.D.sections.length) goScreen('dictate');
+    if (n === 3 && APP.D.sections.length) goScreen('preview');
+    return;
+  }
+  if (n === 2) goScreen('record');
+  else if (n === 3 && APP.R.steps.length) { renderReviewScreen(); goScreen('review'); }
+  else if (n === 4 && APP.R.steps.length) goScreen('preview');
+}
+
+function backToEdit() {
+  if (APP.mode === 'record') { renderReviewScreen(); goScreen('review'); }
+  else goScreen('dictate');
+}
+
+function resetApp() {
+  const R = APP.R; if (R.isRecording) stopRec();
+  R.steps = []; R.fullTranscript = ''; R.segmentText = ''; R.interimText = '';
+  KB.quality.forEach(q => { APP.qualityChecks[q.id] = false; });
+  goScreen('home');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════════════════════════════
+function selectMode(mode) {
+  APP.mode = mode;
+  document.getElementById('modeCardDictate').className = 'mode-card' + (mode==='dictate'?' selected-dictate':'');
+  document.getElementById('modeCardRecord').className  = 'mode-card' + (mode==='record' ?' selected-record':'');
+  document.getElementById('tplSection').classList.toggle('hidden', mode !== 'dictate');
+  updateNavLabels();
+}
+function selectTpl(id, card) {
+  APP.tpl = id;
+  document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+}
+function startApp() {
+  const proc = document.getElementById('f-process').value.trim();
+  if (!proc) { toast('Ingresá el nombre del proceso'); document.getElementById('f-process').focus(); return; }
+  APP.meta = {
+    company: document.getElementById('f-company').value || 'Mi Empresa',
+    process: proc,
+    author:  document.getElementById('f-author').value  || '–',
+    dept:    document.getElementById('f-dept').value    || '',
+    version: document.getElementById('f-version').value || '1.0',
+    date:    document.getElementById('f-date').value    || new Date().toISOString().slice(0,10)
+  };
+  if (APP.mode === 'dictate') {
+    APP.D.sections = TPLS[APP.tpl].sections.map(s => ({ ...s, content: '' }));
+    APP.D.idx = 0;
+    buildDictateSidebar();
+    loadDictateSection(0);
+    goScreen('dictate');
+  } else {
+    APP.R.steps = []; APP.R.fullTranscript = ''; APP.R.segmentText = ''; APP.R.interimText = '';
+    renderCapturedList();
+    goScreen('record');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RECORD MODE
+// ═══════════════════════════════════════════════════════════════════
+async function startRec() {
+  const R = APP.R;
+  try {
+    R.screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor:'always', frameRate:30 }, audio: false });
+    const prev = document.getElementById('screenPreviewVideo');
+    const capt = document.getElementById('captureVideo');
+    prev.srcObject = R.screenStream;
+    capt.srcObject = R.screenStream;
+    R.screenStream.getVideoTracks()[0].onended = () => { if (R.isRecording) stopRec(); };
+    document.getElementById('startOverlay').style.display = 'none';
+    R.isRecording = true; R.isPaused = false;
+    R.startTime = Date.now(); R.elapsed = 0; R.totalPause = 0;
+    R.timerInterval = setInterval(tickTimer, 500);
+    document.getElementById('recDot').classList.add('active');
+    document.getElementById('recStatus').textContent = 'Grabando';
+    document.getElementById('btnPause').style.display = 'inline-flex';
+    document.getElementById('btnStop').style.display  = 'inline-flex';
+    document.getElementById('btnCapture').disabled = false;
+    document.getElementById('tlDot').classList.add('on');
+    startRecog();
+    toast('🎬 Grabación iniciada — narrá tu proceso');
+  } catch (err) { if (err.name !== 'NotAllowedError') toast('Error al iniciar: ' + err.message); }
+}
+
+function stopRec() {
+  const R = APP.R; if (!R.isRecording) return;
+  R.isRecording = false;
+  clearInterval(R.timerInterval);
+  stopRecog();
+  if (R.screenStream) { R.screenStream.getTracks().forEach(t => t.stop()); R.screenStream = null; }
+  document.getElementById('screenPreviewVideo').srcObject = null;
+  document.getElementById('captureVideo').srcObject = null;
+  document.getElementById('recDot').classList.remove('active');
+  document.getElementById('recStatus').textContent = 'Grabación finalizada';
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('btnStop').style.display  = 'none';
+  document.getElementById('btnCapture').disabled = true;
+  document.getElementById('tlDot').classList.remove('on');
+  document.getElementById('startOverlay').style.display = 'flex';
+  toast(`✓ Grabación finalizada — ${APP.R.steps.length} paso(s) capturado(s)`);
+  updateGoReviewBtn();
+}
+
+function pauseResume() {
+  const R = APP.R; if (!R.isRecording) return;
+  if (!R.isPaused) {
+    R.isPaused = true; R.pauseStart = Date.now();
+    document.getElementById('btnPause').innerHTML = '▶ Continuar';
+    document.getElementById('recStatus').textContent = 'Pausado';
+    document.getElementById('recDot').classList.remove('active');
+    document.getElementById('tlDot').classList.remove('on');
+    stopRecog();
+  } else {
+    R.isPaused = false; R.totalPause += Date.now() - R.pauseStart;
+    document.getElementById('btnPause').innerHTML = '⏸ Pausar';
+    document.getElementById('recStatus').textContent = 'Grabando';
+    document.getElementById('recDot').classList.add('active');
+    document.getElementById('tlDot').classList.add('on');
+    startRecog();
+  }
+}
+
+function tickTimer() {
+  const R = APP.R; if (R.isPaused) return;
+  R.elapsed = Math.floor((Date.now() - R.startTime - R.totalPause) / 1000);
+  document.getElementById('recTimer').textContent = fmtTime(R.elapsed);
+}
+function fmtTime(s) { return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); }
+
+function captureStep() {
+  const R = APP.R, vid = document.getElementById('captureVideo');
+  if (!vid.videoWidth) { toast('Esperá a que la pantalla cargue'); return; }
+  const cv = document.getElementById('captureCanvas');
+  cv.width = vid.videoWidth; cv.height = vid.videoHeight;
+  cv.getContext('2d').drawImage(vid, 0, 0);
+  const screenshot = scaleCanvas(cv, 1280, 0.85);
+  const thumbnail  = scaleCanvas(cv, 160,  0.75);
+  const segText = (R.segmentText + ' ' + R.interimText).trim();
+  R.segmentText = ''; R.interimText = '';
+  const step = {
+    id: Date.now(), time: R.elapsed, timeLabel: fmtTime(R.elapsed),
+    screenshot, thumbnail, text: segText,
+    title: autoTitle(segText, R.steps.length),
+    raci: { R:'', A:'', C:'', I:'' }, obs: ''
+  };
+  R.steps.push(step);
+  renderCapturedList(); updateTranscriptEl(); updateGoReviewBtn();
+  toast(`📸 Paso ${R.steps.length} capturado (${step.timeLabel})`);
+  if (step.text && step.text.trim().length > 15) {
+    botAnalyzeStep(step, R.steps.length);
+  }
+}
+
+function scaleCanvas(src, maxW, q) {
+  const scale = src.width > maxW ? maxW / src.width : 1;
+  const c = document.createElement('canvas');
+  c.width = Math.round(src.width * scale); c.height = Math.round(src.height * scale);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', q);
+}
+function autoTitle(text, idx) {
+  if (!text || !text.trim()) return `Paso ${idx + 1}`;
+  const words = text.trim().split(/\s+/).slice(0, 8).join(' ');
+  return words.length < text.trim().length ? words + '…' : words;
+}
+
+function renderCapturedList() {
+  const steps = APP.R.steps;
+  document.getElementById('clCount').textContent = steps.length;
+  const body = document.getElementById('clBody');
+  if (!steps.length) { body.innerHTML = '<div class="cl-empty">Aún no hay pasos.<br>Iniciá la grabación y presioná Capturar.</div>'; return; }
+  body.innerHTML = steps.map((s, i) => `
+    <div class="cl-item">
+      ${s.thumbnail ? `<img class="cl-thumb" src="${s.thumbnail}" alt="P${i+1}">` : `<div class="cl-thumb-ph">📷</div>`}
+      <div class="cl-info">
+        <div class="cl-num">PASO ${i+1} · ${s.timeLabel}</div>
+        <div class="cl-txt">${esc(s.text || '(sin texto)')}</div>
+      </div>
+      <button class="cl-del" onclick="deleteCapture(${s.id})" title="Eliminar">✕</button>
+    </div>
+  `).join('');
+  body.parentElement.scrollTop = body.scrollHeight;
+}
+function deleteCapture(id) { APP.R.steps = APP.R.steps.filter(s => s.id !== id); renderCapturedList(); updateGoReviewBtn(); }
+function updateGoReviewBtn() { document.getElementById('btnGoReview').disabled = APP.R.steps.length === 0; }
+
+function startRecog() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Usá Chrome para el dictado por voz'); return; }
+  const R = APP.R;
+  if (R.recog) { try { R.recog.abort(); } catch(_){} }
+  const rec = new SR();
+  rec.continuous = true; rec.interimResults = true; rec.lang = 'es-MX';
+  rec.onresult = (e) => {
+    let interim = '', hasFinal = false;
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) { R.segmentText += t + ' '; R.fullTranscript += t + ' '; hasFinal = true; }
+      else interim += t;
+    }
+    R.interimText = interim; updateTranscriptEl();
+    if (hasFinal && R.autoCapture) {
+      clearTimeout(R.autoTimer);
+      R.autoTimer = setTimeout(() => { if (R.segmentText.trim() && R.isRecording && !R.isPaused) captureStep(); }, 2500);
+    }
+  };
+  rec.onerror = (e) => { if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Mic: ' + e.error); };
+  rec.onend   = () => { if (R.isRecording && !R.isPaused) { try { rec.start(); } catch(_){} } };
+  R.recog = rec; R.isListening = true;
+  try { rec.start(); } catch(_) {}
+}
+function stopRecog() {
+  const R = APP.R; R.isListening = false; clearTimeout(R.autoTimer);
+  if (R.recog) { try { R.recog.stop(); } catch(_){} R.recog = null; }
+}
+function updateTranscriptEl() {
+  const R = APP.R, el = document.getElementById('tlText');
+  const seg = esc(R.segmentText), int = esc(R.interimText);
+  if (!seg && !int) { el.innerHTML = '<span class="tl-placeholder">El texto de tu narración aparece aquí en tiempo real…</span>'; return; }
+  el.innerHTML = (seg ? `<span class="tl-current">${seg}</span>` : '') + (int ? ` <span class="tl-interim">${int}</span>` : '');
+}
+function toggleAuto() {
+  APP.R.autoCapture = !APP.R.autoCapture;
+  document.getElementById('togAuto').classList.toggle('on', APP.R.autoCapture);
+  document.getElementById('autoLbl').textContent = APP.R.autoCapture ? 'Auto-captura (encendida)' : 'Auto-captura (apagada)';
+}
+function goToReview() {
+  if (!APP.R.steps.length) { toast('Capturá al menos un paso primero'); return; }
+  renderReviewScreen(); goScreen('review');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  REVIEW SCREEN
+// ═══════════════════════════════════════════════════════════════════
+function renderReviewScreen() {
+  const steps = APP.R.steps;
+  document.getElementById('rvTitle').textContent    = `Revisar — ${steps.length} paso(s) capturado(s)`;
+  document.getElementById('rvSubtitle').textContent = `${APP.meta.process} · Asigná roles RACI a cada paso y agregá observaciones sistémicas.`;
+  const list = document.getElementById('rvList');
+  list.innerHTML = '';
+  steps.forEach((step, i) => list.appendChild(buildRvCard(step, i)));
+}
+
+function buildRvCard(step, i) {
+  const div = document.createElement('div');
+  div.className = 'rv-card'; div.id = 'rv-' + step.id;
+  const hasImg = !!step.screenshot;
+  div.innerHTML = `
+    <div class="rv-top">
+      <div class="rv-num">${i+1}</div>
+      <input class="rv-title-in" type="text" value="${esc(step.title)}" placeholder="Título del paso" oninput="updateField(${step.id},'title',this.value)">
+      <span class="rv-time">${step.timeLabel}</span>
+      <div class="rv-acts">
+        ${i > 0                          ? `<button class="rv-act" onclick="moveStep(${step.id},-1)" title="Subir">↑</button>` : ''}
+        ${i < APP.R.steps.length - 1     ? `<button class="rv-act" onclick="moveStep(${step.id}, 1)" title="Bajar">↓</button>` : ''}
+        <button class="rv-act danger" onclick="deleteStep(${step.id})">🗑</button>
+      </div>
+    </div>
+    <div class="rv-body${hasImg ? '' : ' no-img'}">
+      <div class="rv-left">
+        <textarea class="rv-ta" rows="3" placeholder="Descripción de este paso…" oninput="updateField(${step.id},'text',this.value)">${esc(step.text)}</textarea>
+
+        <div class="raci-row">
+          <div class="raci-field">
+            <label><span class="r">R</span> Responsible — ¿Quién ejecuta?</label>
+            <input type="text" value="${esc(step.raci.R)}" placeholder="Nombre o rol" oninput="updateRaci(${step.id},'R',this.value)">
+          </div>
+          <div class="raci-field">
+            <label><span class="a">A</span> Accountable — ¿Quién responde? (uno)</label>
+            <input type="text" value="${esc(step.raci.A)}" placeholder="Nombre o rol" oninput="updateRaci(${step.id},'A',this.value)">
+          </div>
+          <div class="raci-field">
+            <label><span class="c">C</span> Consulted — ¿A quién consultar?</label>
+            <input type="text" value="${esc(step.raci.C)}" placeholder="Nombre o rol" oninput="updateRaci(${step.id},'C',this.value)">
+          </div>
+          <div class="raci-field">
+            <label><span class="i">I</span> Informed — ¿Quién debe saber?</label>
+            <input type="text" value="${esc(step.raci.I)}" placeholder="Nombre o rol" oninput="updateRaci(${step.id},'I',this.value)">
+          </div>
+        </div>
+
+        <div>
+          <div class="raci-obs-label">Observación Sistémica (opcional) — arquetipos, demoras, puntos de apalancamiento</div>
+          <textarea class="raci-obs-ta" rows="2" placeholder="Ej: este paso puede generar un cuello de botella si la aprobación tarda más de 24hs…" oninput="updateField(${step.id},'obs',this.value)">${esc(step.obs)}</textarea>
+        </div>
+      </div>
+      ${hasImg ? `
+        <div class="rv-right">
+          <img class="rv-img" src="${step.screenshot}" alt="Captura paso ${i+1}">
+          <div class="rv-img-rm" onclick="removeImg(${step.id})">✕ Quitar captura</div>
+        </div>` : ''}
+    </div>
+  `;
+  return div;
+}
+
+function updateField(id, field, val) { const s = APP.R.steps.find(s => s.id===id); if (s) s[field] = val; }
+function updateRaci(id, key, val)    { const s = APP.R.steps.find(s => s.id===id); if (s) s.raci[key] = val; }
+function deleteStep(id) { APP.R.steps = APP.R.steps.filter(s => s.id!==id); renderReviewScreen(); renderCapturedList(); }
+function moveStep(id, dir) {
+  const steps = APP.R.steps, idx = steps.findIndex(s => s.id===id), ni = idx + dir;
+  if (ni < 0 || ni >= steps.length) return;
+  [steps[idx], steps[ni]] = [steps[ni], steps[idx]];
+  renderReviewScreen();
+}
+function removeImg(id) { const s = APP.R.steps.find(s => s.id===id); if (s) { s.screenshot=null; s.thumbnail=null; } renderReviewScreen(); }
+function addEmptyStep() {
+  const step = { id: Date.now(), time:0, timeLabel:'00:00', screenshot:null, thumbnail:null, text:'', title:`Paso ${APP.R.steps.length+1}`, raci:{R:'',A:'',C:'',I:''}, obs:'' };
+  APP.R.steps.push(step);
+  renderReviewScreen();
+  setTimeout(() => document.getElementById('rv-'+step.id)?.scrollIntoView({ behavior:'smooth' }), 80);
+}
+function generateDoc() {
+  if (!APP.R.steps.length) { toast('No hay pasos para generar el documento'); return; }
+  goScreen('preview');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DICTATE MODE
+// ═══════════════════════════════════════════════════════════════════
+function buildDictateSidebar() {
+  const nav = document.getElementById('secNavList');
+  nav.innerHTML = '';
+  APP.D.sections.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'sec-item' + (i===0?' active':''); el.id = 'dn-'+i;
+    el.onclick = () => jumpSec(i);
+    el.innerHTML = `<div class="sec-dot"></div><span>${esc(s.title)}</span>`;
+    nav.appendChild(el);
+  });
+}
+
+function loadDictateSection(i) {
+  const D = APP.D, sec = D.sections[i];
+  D.idx = i; D.finalText = sec.content || '';
+  if (D.listening) stopMic();
+
+  document.getElementById('secBadge').textContent  = `Sección ${i+1} de ${D.sections.length}`;
+  document.getElementById('secTitle').textContent  = sec.title;
+  document.getElementById('secHint').textContent   = sec.hint;
+  document.getElementById('sectionContent').value = sec.content || '';
+
+  const box = document.getElementById('tbox');
+  box.className = sec.content ? 'tbox has-content' : 'tbox';
+  box.innerHTML = sec.content
+    ? '<span style="color:var(--green);font-size:11.5px;">✓ Con contenido. Podés re-dictar o editar abajo.</span>'
+    : '<span class="t-placeholder">Presioná el micrófono y empezá a hablar…</span>';
+
+  document.querySelectorAll('.sec-item').forEach((el, j) => {
+    el.classList.remove('active','done');
+    if (j===i) el.classList.add('active');
+    else if (D.sections[j].content) el.classList.add('done');
+  });
+  document.getElementById('btnPrevSec').style.visibility = i===0 ? 'hidden' : 'visible';
+  document.getElementById('btnNextSec').textContent = i===D.sections.length-1 ? 'Ver Vista Previa ✓' : 'Siguiente →';
+  updateDictateProgress();
+  renderKbPanel(sec.id);
+}
+
+function updateDictateProgress() {
+  const D = APP.D, done = D.sections.filter(s => s.content && s.content.trim()).length;
+  document.getElementById('progressFill').style.width = (done / D.sections.length * 100) + '%';
+  document.getElementById('progressLabel').textContent = `${done} / ${D.sections.length} completadas`;
+}
+
+function saveSec()  { APP.D.sections[APP.D.idx].content = document.getElementById('sectionContent').value; }
+function jumpSec(i) { saveSec(); loadDictateSection(i); }
+function nextSec()  {
+  saveSec();
+  const sec = APP.D.sections[APP.D.idx];
+  if (sec.content && sec.content.trim().length > 20) {
+    botAnalyzeSection(sec);
+  }
+  APP.D.idx < APP.D.sections.length-1 ? loadDictateSection(APP.D.idx+1) : goScreen('preview');
+}
+function prevSec()  { saveSec(); if (APP.D.idx > 0) loadDictateSection(APP.D.idx-1); }
+function clearSec() {
+  document.getElementById('sectionContent').value = ''; APP.D.finalText = '';
+  const box = document.getElementById('tbox');
+  box.className = 'tbox';
+  box.innerHTML = '<span class="t-placeholder">Presioná el micrófono y empezá a hablar…</span>';
+}
+function toggleMic() { APP.D.listening ? stopMic() : startMic(); }
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Usá Chrome para el dictado por voz'); return; }
+  const D = APP.D;
+  D.finalText = document.getElementById('sectionContent').value;
+  const rec = new SR();
+  rec.continuous = true; rec.interimResults = true; rec.lang = 'es-MX';
+  rec.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) { D.finalText += t + ' '; document.getElementById('sectionContent').value = D.finalText; }
+      else interim += t;
+    }
+    if (D.listening) {
+      const box = document.getElementById('tbox');
+      const cur = esc(document.getElementById('sectionContent').value);
+      box.innerHTML = cur ? `${cur} <span class="t-interim">${esc(interim)}</span>` : `<span class="t-interim">${esc(interim)||'Escuchando…'}</span>`;
+    }
+  };
+  rec.onerror = (e) => { if (e.error !== 'no-speech') { stopMic(); toast('Error de micrófono: '+e.error); } };
+  rec.onend   = () => { if (D.listening) { try { rec.start(); } catch(_){} } };
+  D.rec = rec; D.listening = true;
+  try { rec.start(); } catch(_) {}
+  document.getElementById('micBtn').classList.add('listening');
+  document.getElementById('micBtn').textContent = '⏹';
+  document.getElementById('micLabel').textContent = 'Escuchando…';
+  document.getElementById('micSub').textContent   = 'Hablá con claridad. Clic para detener.';
+  const box = document.getElementById('tbox');
+  box.className = 'tbox listening';
+  box.innerHTML = '<span class="t-interim">Escuchando…</span>';
+}
+function stopMic() {
+  const D = APP.D; D.listening = false;
+  if (D.rec) { try { D.rec.stop(); } catch(_){} D.rec = null; }
+  document.getElementById('micBtn').classList.remove('listening');
+  document.getElementById('micBtn').textContent = '🎙️';
+  document.getElementById('micLabel').textContent = 'Listo para escuchar';
+  document.getElementById('micSub').textContent   = 'Hacé clic en el micrófono para empezar';
+  const content = document.getElementById('sectionContent').value;
+  const box = document.getElementById('tbox');
+  box.className = content ? 'tbox has-content' : 'tbox';
+  box.innerHTML = content ? '<span style="color:var(--green);font-size:11.5px;">✓ Dictado guardado.</span>' : '<span class="t-placeholder">Presioná el micrófono y empezá a hablar…</span>';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  KB PANEL — Pensamiento Sistémico en tiempo real
+// ═══════════════════════════════════════════════════════════════════
+function renderKbPanel(sectionId) {
+  const panel = document.getElementById('kbPanel');
+  const kb    = KB.bySection[sectionId];
+
+  // Quality checklist card
+  const qHtml = KB.quality.map(q => `
+    <div class="kb-quality-row${APP.qualityChecks[q.id]?' checked':''}" onclick="toggleQuality('${q.id}',this)">
+      <div class="kb-chk">${APP.qualityChecks[q.id]?'✓':''}</div>
+      <span class="kb-q-text">${esc(q.text)}</span>
+    </div>
+  `).join('');
+
+  let principleHtml = '', questionsHtml = '';
+  if (kb) {
+    principleHtml = `
+      <div class="kb-principle">
+        <div class="kb-p-name">${kb.principle.icon} ${kb.principle.name}</div>
+        <div class="kb-p-text">${esc(kb.text)}</div>
+      </div>`;
+    questionsHtml = `
+      <ul class="kb-questions">
+        ${kb.questions.map(q => `<li><span class="kb-q-icon">›</span>${esc(q)}</li>`).join('')}
+      </ul>`;
+  }
+
+  panel.innerHTML = `
+    <div class="kb-card">
+      <div class="kb-card-title sys">🧠 Perspectiva Sistémica</div>
+      ${principleHtml || '<p style="font-size:11px;color:var(--text-3);">Completá la sección con este criterio en mente.</p>'}
+      ${questionsHtml}
+    </div>
+
+    <div class="kb-card">
+      <div class="kb-card-title rol">👥 Marco RACI</div>
+      <div class="raci-mini">
+        ${Object.values(KB.raci).map(r => `
+          <div class="raci-pill ${r.color}">
+            <div class="raci-letter ${r.color}">${r.letter} — ${r.label}</div>
+            <div class="raci-desc">${r.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="kb-card">
+      <div class="kb-card-title chk">✅ Calidad Multi D</div>
+      ${qHtml}
+    </div>
+  `;
+}
+
+function toggleQuality(id, row) {
+  APP.qualityChecks[id] = !APP.qualityChecks[id];
+  row.classList.toggle('checked', APP.qualityChecks[id]);
+  row.querySelector('.kb-chk').textContent = APP.qualityChecks[id] ? '✓' : '';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PREVIEW RENDER
+// ═══════════════════════════════════════════════════════════════════
+function renderPreview() {
+  const { meta } = APP;
+  const dateStr = meta.date
+    ? new Date(meta.date+'T12:00:00').toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric' })
+    : '';
+  const docNum = 'DOC-' + Array.from(crypto.getRandomValues(new Uint8Array(3))).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+  document.getElementById('docPaper').innerHTML = APP.mode === 'record'
+    ? buildRecordDoc(meta, dateStr, docNum)
+    : buildDictateDoc(meta, dateStr, docNum);
+  document.getElementById('btnBackEdit').textContent = APP.mode === 'record' ? '← Volver a Editar' : '← Volver a Dictar';
+}
+
+function docHeader(meta, label, dateStr, docNum) {
+  return `
+    <div class="doc-header-section">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="doc-company-name">${esc(meta.company)}</div>
+          <div class="doc-type-label">${label} · Metodología Multi D — Sistemas, Procesos y Roles</div>
+        </div>
+        ${meta.dept ? `<div style="font-size:9pt;color:#5f6368;text-align:right;">${esc(meta.dept)}</div>` : ''}
+      </div>
+      <table class="doc-meta-table">
+        <tr>
+          <td class="label-cell">N° Documento</td><td>${docNum}</td>
+          <td class="label-cell">Versión</td><td>${esc(meta.version)}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Accountable</td><td>${esc(meta.author)}</td>
+          <td class="label-cell">Fecha</td><td>${dateStr}</td>
+        </tr>
+        ${meta.dept ? `<tr><td class="label-cell">Sistema / Área</td><td colspan="3">${esc(meta.dept)}</td></tr>` : ''}
+      </table>
+    </div>
+    <div class="doc-process-title">${esc(meta.process)}</div>
+  `;
+}
+
+function buildSystemicBox(steps) {
+  // Build a summary of systemic observations from all steps
+  const obs = steps.filter(s => s.obs && s.obs.trim());
+  if (!obs.length) return '';
+  return `
+    <div class="doc-section">
+      <div class="doc-sec-title">Observaciones Sistémicas del Proceso</div>
+      <div class="doc-sistemic-box">
+        <div class="doc-sistemic-box-title">🧠 Notas de Pensamiento Sistémico</div>
+        ${obs.map(s => `
+          <div class="doc-sistemic-item">
+            <span style="font-weight:700;flex-shrink:0;">Paso ${APP.R.steps.indexOf(s)+1}:</span>
+            <span>${esc(s.obs)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function buildRaciTable(steps) {
+  const hasRaci = steps.some(s => s.raci.R || s.raci.A || s.raci.C || s.raci.I);
+  if (!hasRaci) return '';
+  return `
+    <div class="doc-section">
+      <div class="doc-sec-title">Matriz RACI del Proceso</div>
+      <table class="doc-raci-table">
+        <tr>
+          <th>Paso</th>
+          <th><span class="raci-tag R">R</span> Responsible</th>
+          <th><span class="raci-tag A">A</span> Accountable</th>
+          <th><span class="raci-tag C">C</span> Consulted</th>
+          <th><span class="raci-tag I">I</span> Informed</th>
+        </tr>
+        ${steps.map((s, i) => `
+          <tr>
+            <td><strong>${i+1}. ${esc(s.title)}</strong></td>
+            <td>${s.raci.R ? `<span class="raci-tag R">${esc(s.raci.R)}</span>` : '—'}</td>
+            <td>${s.raci.A ? `<span class="raci-tag A">${esc(s.raci.A)}</span>` : '—'}</td>
+            <td>${s.raci.C ? `<span class="raci-tag C">${esc(s.raci.C)}</span>` : '—'}</td>
+            <td>${s.raci.I ? `<span class="raci-tag I">${esc(s.raci.I)}</span>` : '—'}</td>
+          </tr>
+        `).join('')}
+      </table>
+    </div>
+  `;
+}
+
+function buildRecordDoc(meta, dateStr, docNum) {
+  const R = APP.R;
+  const header   = docHeader(meta, 'Guía de Proceso con Capturas de Pantalla', dateStr, docNum);
+  const overview = R.fullTranscript.trim()
+    ? `<div class="doc-section"><div class="doc-sec-title">Descripción General (narración completa)</div><div class="doc-overview">${esc(R.fullTranscript.trim())}</div></div>`
+    : '';
+  const raciTable  = buildRaciTable(R.steps);
+  const sistemicBox = buildSystemicBox(R.steps);
+
+  const stepsHtml = R.steps.map((step, i) => {
+    const raciRow = (step.raci.R || step.raci.A || step.raci.C || step.raci.I) ? `
+      <div class="doc-step-raci">
+        <div class="doc-step-raci-row">
+          ${step.raci.R ? `<span class="raci-tag R">R: ${esc(step.raci.R)}</span>` : ''}
+          ${step.raci.A ? `<span class="raci-tag A">A: ${esc(step.raci.A)}</span>` : ''}
+          ${step.raci.C ? `<span class="raci-tag C">C: ${esc(step.raci.C)}</span>` : ''}
+          ${step.raci.I ? `<span class="raci-tag I">I: ${esc(step.raci.I)}</span>` : ''}
+        </div>
+      </div>
+    ` : '';
+    return `
+      <div class="doc-step-card">
+        <div class="doc-step-header">
+          <div class="doc-step-num">${i+1}</div>
+          <div class="doc-step-title">${esc(step.title)}</div>
+        </div>
+        ${step.text ? `<div class="doc-step-body">${esc(step.text)}</div>` : ''}
+        ${raciRow}
+        ${step.screenshot ? `<img class="doc-step-img" src="${step.screenshot}" alt="Captura paso ${i+1}"><div class="doc-step-caption">Figura ${i+1} — ${esc(step.title)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  const noContent = '<p style="color:#9aa0a6;text-align:center;padding:40px 0;">No hay pasos capturados.</p>';
+
+  return header + overview +
+    `<div class="doc-section"><div class="doc-sec-title">Pasos del Proceso</div>${stepsHtml || noContent}</div>` +
+    raciTable + sistemicBox +
+    `<div class="doc-footer-section"><span>Generado con VozDoc Multi D · Metodología: Sistemas, Procesos y Roles — Multi D</span><span>v${esc(meta.version)} — ${dateStr}</span></div>`;
+}
+
+function buildDictateDoc(meta, dateStr, docNum) {
+  const tpl    = TPLS[APP.tpl];
+  const header = docHeader(meta, tpl.label, dateStr, docNum);
+
+  // Quality check summary
+  const doneChecks = KB.quality.filter(q => APP.qualityChecks[q.id]);
+  const qualityHtml = doneChecks.length ? `
+    <div class="doc-section">
+      <div class="doc-sec-title">Criterios de Calidad Multi D Verificados</div>
+      <div class="doc-sistemic-box">
+        <div class="doc-sistemic-box-title">✅ Validado con metodología Multi D</div>
+        ${doneChecks.map(q => `<div class="doc-sistemic-item"><span>✓</span><span>${esc(q.text)}</span></div>`).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  let body = '';
+  APP.D.sections.forEach(sec => {
+    if (!sec.content || !sec.content.trim()) return;
+    let content = '';
+    if      (sec.type === 'steps')     content = renderSteps(sec.content);
+    else if (sec.type === 'checklist') content = renderChecklist(sec.content);
+    else                               content = `<div class="doc-text">${esc(sec.content)}</div>`;
+    body += `<div class="doc-section"><div class="doc-sec-title">${esc(sec.title)}</div>${content}</div>`;
+  });
+
+  return header +
+    (body || '<p style="color:#9aa0a6;text-align:center;padding:40px 0;">No hay contenido dictado.</p>') +
+    qualityHtml +
+    `<div class="doc-footer-section"><span>Generado con VozDoc Multi D · Metodología: Sistemas, Procesos y Roles — Multi D</span><span>v${esc(meta.version)} — ${dateStr}</span></div>`;
+}
+
+function renderSteps(text) {
+  const items = splitItems(text);
+  if (items.length < 2) return `<div class="doc-text">${esc(text)}</div>`;
+  return '<ul class="doc-steps">' + items.map((t,i) => `<li><div class="doc-step-num">${i+1}</div><div>${esc(t)}</div></li>`).join('') + '</ul>';
+}
+function renderChecklist(text) {
+  const items = splitItems(text);
+  if (items.length < 2) return `<div class="doc-text">${esc(text)}</div>`;
+  return '<ul class="doc-checklist">' + items.map(t => `<li><span class="doc-checkbox"></span><span>${esc(t)}</span></li>`).join('') + '</ul>';
+}
+function splitItems(text) {
+  let lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  if (lines.length > 1) return lines.map(l => l.replace(/^[-•*\d]+[.)]\s*/,''));
+  lines = text.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ])/);
+  if (lines.length > 1) return lines.map(l => l.trim()).filter(Boolean);
+  const oral = text.split(/(?:primer[ao]?|segundo|tercer[ao]?|cuart[ao]|quint[ao]|luego|después|finalmente|por\s+último|a\s+continuación)\s+(?:paso[:\s]*)?/i);
+  if (oral.length > 1) return oral.map(s => s.trim()).filter(Boolean);
+  return [text];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════════════════════════════
+const EXPORT_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;800&family=Titillium+Web:wght@400;600;700&display=swap');
+body{font-family:'Raleway',Arial,sans-serif;font-size:11pt;line-height:1.65;color:#000013;}
+.doc-header-section{border-bottom:3px solid #7430FF;padding-bottom:15px;margin-bottom:24px;}
+.doc-company-name{font-size:17pt;font-weight:bold;color:#7430FF;margin-bottom:2px;font-family:'Raleway',sans-serif;}
+.doc-type-label{font-size:9pt;color:#7a6fa8;}
+.doc-meta-table{width:100%;border-collapse:collapse;margin-top:11px;font-size:9pt;}
+.doc-meta-table td{padding:5px 8px;border:1px solid #d5c8f5;}
+.label-cell{background:#F6F2FF;font-weight:bold;color:#3d3660;width:105px;}
+.doc-process-title{font-size:14pt;font-weight:bold;text-align:center;padding:12px 16px;background:#F6F2FF;border-left:5px solid #7430FF;margin-bottom:24px;font-family:'Raleway',sans-serif;}
+.doc-section{margin-bottom:24px;}
+.doc-sec-title{font-size:11.5pt;font-weight:bold;color:#7430FF;border-bottom:1px solid #d5c8f5;padding-bottom:5px;margin-bottom:10px;font-family:'Titillium Web',sans-serif;}
+.doc-text{font-size:11pt;line-height:1.7;white-space:pre-wrap;}
+.doc-overview{background:#F6F2FF;border-left:4px solid #C87DE8;padding:11px 14px;margin-bottom:18px;font-size:10.5pt;line-height:1.7;color:#3d3660;white-space:pre-wrap;}
+.doc-steps,.doc-checklist{padding-left:0;list-style:none;}
+.doc-steps li,.doc-checklist li{display:flex;align-items:flex-start;gap:11px;margin-bottom:10px;font-size:11pt;line-height:1.6;}
+.doc-step-num{background:#7430FF;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;flex-shrink:0;margin-top:2px;}
+.doc-checkbox{width:14px;height:14px;border:2px solid #7430FF;border-radius:3px;flex-shrink:0;margin-top:3px;display:inline-block;}
+.doc-footer-section{border-top:1px solid #d5c8f5;margin-top:38px;padding-top:11px;font-size:8.5pt;color:#7a6fa8;display:flex;justify-content:space-between;}
+.doc-step-card{margin-bottom:26px;page-break-inside:avoid;}
+.doc-step-header{display:flex;align-items:flex-start;gap:11px;margin-bottom:8px;}
+.doc-step-title{font-size:12pt;font-weight:bold;color:#000013;padding-top:1px;font-family:'Titillium Web',sans-serif;}
+.doc-step-body{font-size:11pt;line-height:1.7;white-space:pre-wrap;margin-bottom:10px;margin-left:33px;}
+.doc-step-img{display:block;max-width:100%;border-radius:4px;border:1px solid #d5c8f5;margin-left:33px;box-shadow:0 1px 5px rgba(116,48,255,.12);}
+.doc-step-caption{font-size:8.5pt;color:#7a6fa8;text-align:center;margin-top:4px;font-style:italic;}
+.doc-raci-table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-top:6px;}
+.doc-raci-table th{padding:6px 9px;background:#F6F2FF;font-weight:bold;text-align:left;border:1px solid #d5c8f5;color:#3d3660;font-family:'Titillium Web',sans-serif;}
+.doc-raci-table td{padding:6px 9px;border:1px solid #d5c8f5;}
+.doc-raci-table tr:nth-child(even) td{background:#faf8ff;}
+.raci-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8.5pt;font-weight:bold;}
+.raci-tag.R{background:#ede9ff;color:#5a20e8;}
+.raci-tag.A{background:#fce7f3;color:#9d174d;}
+.raci-tag.C{background:#e8f8ee;color:#065f46;}
+.raci-tag.I{background:#fef3c7;color:#92400e;}
+.doc-sistemic-box{background:#f0e8ff;border:1px solid #C87DE8;border-radius:6px;padding:12px 15px;margin-bottom:20px;}
+.doc-sistemic-box-title{font-size:9pt;font-weight:bold;color:#7430FF;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;font-family:'Titillium Web',sans-serif;}
+.doc-sistemic-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:10pt;color:#3d3660;}
+.doc-step-raci{margin-left:33px;margin-top:6px;}
+.doc-step-raci-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:3px;}
+`;
+
+function exportDoc() {
+  const inner = document.getElementById('docPaper').innerHTML;
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${esc(APP.meta.process)}</title><style>${EXPORT_CSS}</style></head><body>${inner}</body></html>`;
+  const blob = new Blob(['\ufeff', html], { type:'application/vnd.ms-word;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href:url, download: sanitize(APP.meta.process)+'.doc' });
+  a.click(); URL.revokeObjectURL(url);
+  toast('✓ .DOC descargado con RACI e imágenes — subilo a Drive y abrilo con Google Docs');
+}
+async function copyFormatted() {
+  const html = `<style>${EXPORT_CSS}</style>` + document.getElementById('docPaper').outerHTML;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type:'text/html' }) })]);
+    toast('✓ Copiado con formato, RACI e imágenes — pegá con Ctrl+V en Google Docs');
+  } catch {
+    try { await navigator.clipboard.writeText(document.getElementById('docPaper').innerText); toast('Texto copiado (sin imágenes)'); }
+    catch { toast('Error al copiar. Intentá con Chrome.'); }
+  }
+}
+function printDoc() {
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(APP.meta.process)}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{padding:44px 50px;}${EXPORT_CSS}@media print{body{padding:16px;}img{max-width:100%!important;page-break-inside:avoid;}}</style></head><body>${document.getElementById('docPaper').innerHTML}</body></html>`);
+  w.document.close(); setTimeout(() => w.print(), 500);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════════
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function sanitize(s) {
+  return (s||'documento').replace(/[^\w\sáéíóúñÁÉÍÓÚÑ\-]/g,'').trim().replace(/\s+/g,'_').slice(0,80);
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3400);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PROCESS BOT — Asistente IA de documentación (Metodología Multi D)
+// ═══════════════════════════════════════════════════════════════════
+
+const BOT = {
+  open: false,
+  loading: false,
+  history: [], // { role: 'user'|'assistant', content: string }
+  apiKey: localStorage.getItem('processbot_key') || ''
+};
+
+// ── Sistema de conocimiento del bot ────────────────────────────────
+function botSystemPrompt() {
+  const proc = APP.meta.process || null;
+  const area  = APP.meta.dept   || null;
+  const resp  = APP.meta.author || null;
+
+  // Sección activa en modo Dictar
+  let activeSec = null;
+  if (APP.mode === 'dictate' && APP.D.sections.length) {
+    const sec = APP.D.sections[APP.D.idx];
+    if (sec) activeSec = `El usuario está completando la sección "${sec.title}". Hint actual: "${sec.hint}"`;
+  }
+
+  // Pasos en modo Grabar
+  let stepsCtx = '';
+  if (APP.mode === 'record' && APP.R.steps.length) {
+    stepsCtx = `El usuario lleva ${APP.R.steps.length} paso(s) capturado(s).`;
+  }
+
+  return `Sos el Process Bot, el asistente de documentación de procesos de la plataforma VozDoc de Multi D.
+
+TU FUNCIÓN:
+- Ayudar a quien está documentando un proceso en este momento a estructurarlo correctamente.
+- Dar consejos prácticos sobre cómo completar cada sección del documento.
+- Hacer preguntas que ayuden al usuario a pensar mejor el proceso.
+- Detectar supuestos, cuellos de botella o falta de claridad en lo que describe el usuario.
+- Responder dudas sobre metodología de sistemas, procesos y roles.
+
+METODOLOGÍA QUE APLICÁS (Multi D):
+
+1. PROCESO: Secuencia ordenada de acciones para producir un resultado. Como una receta:
+   - Pasos en orden exacto
+   - Ingredientes/recursos exactos (sin supuestos)
+   - Orden de ejecución
+   - Condiciones previas (temperatura): qué debe estar listo antes
+   - Señales de control: cómo saber que cada paso salió bien
+   Objetivo del proceso: estandarizar la forma de hacer las cosas. Sin procesos, cada persona hace las cosas a su manera.
+
+2. SISTEMA: Conjunto de elementos y procesos que interactúan produciendo un resultado.
+   Elementos: Input → Procesos → Output → Feedback. Y el Contexto (condiciones en las que opera).
+   Cada proceso es un subsistema dentro de un macrosistema.
+
+3. PROBLEMA SISTEMÁTICO: Si algo falla siempre de la misma forma → es sistemático, no personal.
+   Antes de culpar a la persona, preguntarse: ¿el proceso está documentado y es claro?
+
+4. SUPUESTOS: El enemigo número 1 de la delegación. "Lo que se asume que alguien sabe hacer."
+   Los procesos eliminan los supuestos: hay paso 1, paso 2, paso 3.
+
+5. ROLES (RACI):
+   - R (Responsible): quién ejecuta. Puede haber varios.
+   - A (Accountable): quién responde si falla. UNO solo por tarea.
+   - C (Consulted): a quién consultar antes de avanzar.
+   - I (Informed): quién debe saber que esto ocurrió.
+   Error frecuente: confundir A con R. El gerente no siempre ejecuta (R) pero siempre responde (A).
+
+6. CÓMO DISEÑAR UN PROCESO (pasos):
+   a) Definir roles y responsabilidades primero (sin esto, los procesos quedan como ensalada de frutas)
+   b) Detallar cada responsabilidad como proceso específico
+   c) Flujograma (visual, opcional pero recomendado)
+   d) Cadencia: ¿con qué frecuencia se ejecuta?
+   e) KPIs de resultado: ¿cómo saber que el proceso cumplió su objetivo?
+
+7. CUELLO DE BOTELLA: Punto angosto del sistema donde el flujo se frena.
+   Identificarlo requiere KPIs (indicadores medibles). Sin métricas no hay diagnóstico.
+
+8. PLAYBOOK CENTRAL: Documento madre con links a procesos, credenciales y recursos.
+   Objetivo: que el equipo encuentre cualquier recurso sin tener que preguntar al líder.
+
+9. CRITERIOS DE CALIDAD DE UN PROCESO:
+   ✅ Responsable claro (no "el equipo")
+   ✅ Input y output definidos
+   ✅ RACI asignado
+   ✅ Sin supuestos — todo escrito
+   ✅ Señales de control documentadas
+   ✅ Cadencia definida
+   ✅ KPI de resultado
+   ✅ Ruta de excepción documentada
+
+ESTILO DE RESPUESTA:
+- Respondé siempre en español, de forma directa y práctica.
+- Usá el "vos" argentino, como hablaría Juan de Multi D.
+- Sé concreto: si el usuario describe algo vago, hacé UNA pregunta clave para clarificarlo.
+- No des lecciones teóricas largas — preferí dar una pregunta o un consejo accionable.
+- Podés usar listas cuando ayuda a clarificar.
+- Máximo 200 palabras por respuesta salvo que el usuario pida algo más extenso.
+- Si detectás un supuesto en lo que describe el usuario, señalalo directamente: "Ahí hay un supuesto."
+
+${proc ? `CONTEXTO DEL PROCESO ACTUAL:
+- Nombre del proceso: "${proc}"
+${area ? `- Área/sistema: "${area}"` : ''}
+${resp ? `- Responsable final (A): "${resp}"` : ''}
+${activeSec ? `- ${activeSec}` : ''}
+${stepsCtx ? `- ${stepsCtx}` : ''}` : 'El usuario todavía no configuró el proceso. Ayudalo a comenzar.'}`;
+}
+
+// ── API call ───────────────────────────────────────────────────────
+async function botCallAPI(userMsg) {
+  BOT.history.push({ role: 'user', content: userMsg });
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': BOT.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      system: botSystemPrompt(),
+      messages: BOT.history
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const reply = data.content?.[0]?.text || '';
+  BOT.history.push({ role: 'assistant', content: reply });
+  return reply;
+}
+
+// ── UI helpers ─────────────────────────────────────────────────────
+function toggleBot() {
+  BOT.open = !BOT.open;
+  document.getElementById('bot-bubble').classList.toggle('bot-open', BOT.open);
+  if (BOT.open) {
+    checkBotSetup();
+    if (BOT.history.length === 0 && BOT.apiKey) botGreet();
+    clearBotBadge();
+    setTimeout(() => document.getElementById('botInput').focus(), 250);
+  }
+}
+
+function checkBotSetup() {
+  const setup = document.getElementById('botSetup');
+  if (BOT.apiKey) {
+    setup.style.display = 'none';
+  } else {
+    setup.style.display = 'flex';
+  }
+}
+
+function saveApiKey() {
+  const val = document.getElementById('botKeyIn').value.trim();
+  if (!val.startsWith('sk-ant')) { toast('La key debe comenzar con sk-ant…'); return; }
+  BOT.apiKey = val;
+  localStorage.setItem('processbot_key', val);
+  document.getElementById('botSetup').style.display = 'none';
+  if (BOT.history.length === 0) botGreet();
+  toast('Process Bot activado');
+}
+
+function clearApiKey() {
+  BOT.apiKey = '';
+  localStorage.removeItem('processbot_key');
+  BOT.history = [];
+  document.getElementById('botMessages').innerHTML = '';
+  checkBotSetup();
+}
+
+function botGreet() {
+  const proc = APP.meta.process;
+  let greeting;
+  if (proc) {
+    greeting = `Hola, soy el **Process Bot**. Veo que estás documentando **"${proc}"**. ¿En qué parte del proceso necesitás ayuda? Puedo guiarte con la estructura, los roles RACI, las señales de control o cualquier duda que tengas.`;
+  } else {
+    greeting = `Hola, soy el **Process Bot** de Multi D. Estoy acá para ayudarte a documentar tu proceso correctamente: estructura de pasos, roles RACI, señales de control, cuellos de botella y más. ¿Por dónde empezamos?`;
+  }
+  appendBotMsg('bot', greeting);
+}
+
+function appendBotMsg(role, text) {
+  const msgs = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = `bot-msg ${role}`;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bot-msg-bubble';
+  bubble.innerHTML = formatBotText(text);
+
+  const time = document.createElement('div');
+  time.className = 'bot-msg-time';
+  time.textContent = new Date().toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+
+  div.appendChild(bubble);
+  div.appendChild(time);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
+}
+
+function formatBotText(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code style="background:#eee;padding:1px 4px;border-radius:3px;font-size:11px;">$1</code>')
+    .replace(/✅|⚠️|🔴|🟡|💡|📋|🔄|👥/g, m => `<span>${m}</span>`)
+    .replace(/\n/g, '<br>');
+}
+
+function showTyping() {
+  const msgs = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = 'bot-msg bot'; div.id = 'botTyping';
+  div.innerHTML = '<div class="bot-typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('botTyping');
+  if (el) el.remove();
+}
+
+function setBotLoading(v) {
+  BOT.loading = v;
+  document.getElementById('botStatusDot').classList.toggle('loading', v);
+  document.getElementById('botSendBtn').disabled = v;
+}
+
+// ── Send message ───────────────────────────────────────────────────
+async function botSend() {
+  if (BOT.loading) return;
+  if (!BOT.apiKey) { checkBotSetup(); toast('Activá el Process Bot primero'); return; }
+  const ta = document.getElementById('botInput');
+  const msg = ta.value.trim();
+  if (!msg) return;
+
+  ta.value = '';
+  ta.style.height = 'auto';
+  appendBotMsg('user', msg);
+  showTyping();
+  setBotLoading(true);
+
+  try {
+    const reply = await botCallAPI(msg);
+    removeTyping();
+    appendBotMsg('bot', reply);
+  } catch(e) {
+    removeTyping();
+    const errMsg = e.message.includes('401') ? 'API Key inválida. Revisá tu clave de Anthropic.' :
+                   e.message.includes('429') ? 'Límite de requests alcanzado. Esperá un momento.' :
+                   `Error: ${e.message}`;
+    appendBotMsg('bot', `⚠️ ${errMsg}`);
+  } finally {
+    setBotLoading(false);
+  }
+}
+
+function botQuickSend(msg) {
+  if (BOT.loading) return;
+  if (!BOT.apiKey) { toggleBot(); toast('Activá el Process Bot primero'); return; }
+  if (!BOT.open) toggleBot();
+  document.getElementById('botInput').value = msg;
+  setTimeout(() => botSend(), 100);
+}
+
+// ── Análisis en tiempo real ────────────────────────────────────────
+
+// Analiza una sección del modo Dictar cuando el usuario avanza
+async function botAnalyzeSection(sec) {
+  if (!BOT.apiKey) return;
+
+  const proc  = APP.meta.process || 'el proceso';
+  const allCtx = APP.D.sections
+    .filter(s => s.content && s.content.trim())
+    .map(s => `[${s.title}]: ${s.content.trim()}`)
+    .join('\n');
+
+  const sysMsg = `${botSystemPrompt()}
+
+MODO: Análisis automático en tiempo real. El usuario acaba de terminar de completar una sección y avanzó a la siguiente. Tu rol ahora es analista, no respondedor de preguntas.`;
+
+  const analysisPrompt = `Analicé lo que el usuario acaba de dictar para la sección "${sec.title}" del proceso "${proc}".
+
+CONTENIDO DICTADO:
+${sec.content.trim()}
+
+${allCtx.length > sec.content.trim().length ? `CONTEXTO DE OTRAS SECCIONES YA COMPLETADAS:\n${allCtx}` : ''}
+
+Hacé un análisis concreto y breve (máximo 4 puntos cortos) siguiendo este criterio:
+- ¿Hay supuestos no documentados?
+- ¿Falta el responsable claro (A o R)?
+- ¿Las señales de control están definidas?
+- ¿Qué mejoraría o completaría este contenido para que sea un proceso sin ambigüedades?
+
+Respondé directamente, sin saludos. Si el contenido está bien, decilo con una observación puntual de mejora igual.`;
+
+  await botProactiveCall(analysisPrompt, sysMsg, `📋 Análisis — ${sec.title}`);
+}
+
+// Analiza un paso capturado en modo Grabar
+async function botAnalyzeStep(step, stepNum) {
+  if (!BOT.apiKey) return;
+
+  const proc    = APP.meta.process || 'el proceso';
+  const allText = APP.R.steps.map((s, i) => `Paso ${i+1}: ${s.text || '(sin texto)'}`).join('\n');
+
+  const sysMsg = `${botSystemPrompt()}
+
+MODO: Análisis automático de paso capturado. El usuario está grabando su pantalla y acaba de marcar un paso. Analizá el paso como un observador del proceso siendo documentado.`;
+
+  const analysisPrompt = `El usuario acaba de capturar el Paso ${stepNum} del proceso "${proc}".
+
+TEXTO DEL PASO ${stepNum}:
+${step.text.trim()}
+
+PASOS ANTERIORES:
+${allText}
+
+Analizá este paso en 2-3 puntos cortos y directos:
+- ¿Está claro qué acción se realiza?
+- ¿Se mencionó quién lo hace (rol)?
+- ¿Hay algún supuesto o algo que falta explicar para que alguien más lo pueda replicar?
+
+Si detectás algo bueno, decilo. Si falta algo, sé específico sobre qué falta.`;
+
+  await botProactiveCall(analysisPrompt, sysMsg, `📸 Paso ${stepNum} capturado`);
+}
+
+// Función base para llamadas proactivas del bot (sin que el usuario preguntó)
+async function botProactiveCall(prompt, systemOverride, label) {
+  if (!BOT.apiKey || BOT.loading) return;
+
+  setBotLoading(true);
+
+  // Si el panel está cerrado, mostrar badge
+  if (!BOT.open) showBotBadge();
+
+  // Agregar separador visual si hay mensajes previos
+  if (BOT.open && document.getElementById('botMessages').children.length > 0) {
+    appendBotDivider();
+  }
+
+  // Construir historial sin contaminar BOT.history global
+  // El análisis va al historial para que el bot tenga contexto
+  const analysisMessages = [...BOT.history, { role: 'user', content: prompt }];
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': BOT.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        system: systemOverride || botSystemPrompt(),
+        messages: analysisMessages
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Error ${response.status}`);
+    }
+
+    const data  = await response.json();
+    const reply = data.content?.[0]?.text || '';
+
+    // Agregar al historial para que sea contexto de conversación futura
+    BOT.history.push({ role: 'user', content: `[Análisis automático — ${label}] El proceso avanzó. Revisá mi contenido.` });
+    BOT.history.push({ role: 'assistant', content: reply });
+
+    // Mostrar como mensaje de análisis
+    appendBotAnalysis(label, reply);
+
+    // Badge si está cerrado
+    if (!BOT.open) showBotBadge();
+
+  } catch(e) {
+    // Silencioso — no interrumpir el flujo del usuario con errores de análisis
+    console.warn('Process Bot análisis error:', e.message);
+  } finally {
+    setBotLoading(false);
+  }
+}
+
+// ── Badge de notificación ──────────────────────────────────────────
+let badgeCount = 0;
+function showBotBadge() {
+  badgeCount++;
+  const badge = document.getElementById('botBadge');
+  badge.textContent = badgeCount > 9 ? '9+' : badgeCount;
+  badge.classList.add('show');
+}
+function clearBotBadge() {
+  badgeCount = 0;
+  document.getElementById('botBadge').classList.remove('show');
+}
+
+// ── Helpers de UI ──────────────────────────────────────────────────
+function appendBotAnalysis(label, text) {
+  const msgs = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = 'bot-msg bot analysis';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bot-msg-bubble';
+  bubble.innerHTML = `<div class="bot-analysis-label">⚡ ${label}</div>${formatBotText(text)}`;
+
+  const time = document.createElement('div');
+  time.className = 'bot-msg-time';
+  time.textContent = new Date().toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+
+  div.appendChild(bubble);
+  div.appendChild(time);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendBotDivider() {
+  const msgs = document.getElementById('botMessages');
+  const div = document.createElement('div');
+  div.className = 'bot-divider';
+  div.textContent = '· · ·';
+  msgs.appendChild(div);
+}
+
+// ── Init ───────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (BOT.apiKey) {
+    document.getElementById('botSetup').style.display = 'none';
+  }
+});
+
+// toggleBot ya limpia el badge (ver implementación arriba)
+</script>
+</body>
+</html>
