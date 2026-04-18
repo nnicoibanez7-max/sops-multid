@@ -426,19 +426,19 @@
     <p>Cada proceso se documenta con la metodología Multi D: sistema, roles, procesos sin supuestos y criterios de calidad basados en resultados medibles.</p>
   </div>
   <div class="mode-grid">
-    <div class="mode-card" id="modeCardDictate" onclick="selectMode('dictate')">
+    <div class="mode-card selected-dictate" id="modeCardDictate" onclick="selectMode('dictate')">
       <div class="mode-icon">📝</div>
       <div class="mode-title">Dictar por Sección</div>
       <div class="mode-desc">Documentá sección a sección con guía sistémica en tiempo real. Ideal para estructurar conocimiento que ya tenés.</div>
     </div>
-    <div class="mode-card selected-record" id="modeCardRecord" onclick="selectMode('record')">
+    <div class="mode-card" id="modeCardRecord" onclick="selectMode('record')">
       <div class="mode-badge">★ Nuevo</div>
       <div class="mode-icon">🎬</div>
       <div class="mode-title">Grabar Pantalla + Narrar</div>
       <div class="mode-desc">Grabá tu pantalla mientras explicás. Capturá momentos clave y generá un documento con pasos, roles RACI y capturas visuales.</div>
     </div>
   </div>
-  <div class="tpl-section hidden" id="tplSection">
+  <div class="tpl-section" id="tplSection">
     <div class="tpl-wrap">
       <div class="tpl-wrap-title">Plantilla de Documento</div>
       <div class="template-grid">
@@ -1016,7 +1016,7 @@ const TPLS = {
 //  APP STATE
 // ═══════════════════════════════════════════════════════════════════
 const APP = {
-  mode: 'record', tpl: 'sop', meta: {},
+  mode: 'dictate', tpl: 'sop', meta: {},
   qualityChecks: {},  // { q1: true, q2: false, ... }
   D: { sections: [], idx: 0, rec: null, listening: false, finalText: '' },
   R: {
