@@ -1110,26 +1110,36 @@ function selectTpl(id, card) {
   card.classList.add('selected');
 }
 function startApp() {
-  const proc = document.getElementById('f-process').value.trim();
-  if (!proc) { toast('Ingresá el nombre del proceso'); document.getElementById('f-process').focus(); return; }
-  APP.meta = {
-    company: document.getElementById('f-company').value || 'Mi Empresa',
-    process: proc,
-    author:  document.getElementById('f-author').value  || '–',
-    dept:    document.getElementById('f-dept').value    || '',
-    version: document.getElementById('f-version').value || '1.0',
-    date:    document.getElementById('f-date').value    || new Date().toISOString().slice(0,10)
-  };
-  if (APP.mode === 'dictate') {
-    APP.D.sections = TPLS[APP.tpl].sections.map(s => ({ ...s, content: '' }));
-    APP.D.idx = 0;
-    buildDictateSidebar();
-    loadDictateSection(0);
-    goScreen('dictate');
-  } else {
-    APP.R.steps = []; APP.R.fullTranscript = ''; APP.R.segmentText = ''; APP.R.interimText = '';
-    renderCapturedList();
-    goScreen('record');
+  try {
+    const proc = document.getElementById('f-process').value.trim();
+    if (!proc) { toast('Ingresá el nombre del proceso'); document.getElementById('f-process').focus(); return; }
+
+    // Si no seleccionaron modo, forzar dictate
+    if (!APP.mode) APP.mode = 'dictate';
+
+    APP.meta = {
+      company: document.getElementById('f-company').value || 'Mi Empresa',
+      process: proc,
+      author:  document.getElementById('f-author').value  || '–',
+      dept:    document.getElementById('f-dept').value    || '',
+      version: document.getElementById('f-version').value || '1.0',
+      date:    document.getElementById('f-date').value    || new Date().toISOString().slice(0,10)
+    };
+    if (APP.mode === 'dictate') {
+      if (!APP.tpl || !TPLS[APP.tpl]) APP.tpl = 'sop';
+      APP.D.sections = TPLS[APP.tpl].sections.map(s => ({ ...s, content: '' }));
+      APP.D.idx = 0;
+      buildDictateSidebar();
+      loadDictateSection(0);
+      goScreen('dictate');
+    } else {
+      APP.R.steps = []; APP.R.fullTranscript = ''; APP.R.segmentText = ''; APP.R.interimText = '';
+      renderCapturedList();
+      goScreen('record');
+    }
+  } catch(err) {
+    toast('Error al iniciar: ' + err.message);
+    console.error('startApp error:', err);
   }
 }
 
